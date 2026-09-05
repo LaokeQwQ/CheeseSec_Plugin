@@ -1,0 +1,29 @@
+# Secrets and local state
+*.key
+*.pem
+*.p12
+*.token
+.env
+.env.*
+data/
+runtime/
+state/
+logs/
+
+# Generated outputs
+dist/
+build/
+coverage/
+*.crp
+*.tmp
+
+# Agent/editor tooling and OS files
+node_modules/
+.DS_Store
+.idea/
+.vscode/
+
+# Never publish Agent tooling
+agent-eyes/
+code-inspector/
+codex-acp/
