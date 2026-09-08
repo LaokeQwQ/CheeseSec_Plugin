@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/store/v1/catalog.schema.json",
+  "title": "CheeseSec catalog index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "catalog_sequence", "releases", "withdrawals"],
+  "properties": {
+    "api_version": { "const": "store.cheesesec.com/v1" },
+    "catalog_sequence": { "type": "integer", "minimum": 0 },
+    "releases": { "type": "array", "items": { "$ref": "release.schema.json" }, "uniqueItems": true },
+    "withdrawals": { "type": "array", "items": { "$ref": "#/$defs/withdrawal" }, "uniqueItems": true }
+  },
+  "$defs": {
+    "withdrawal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release_id", "withdrawal_id", "reason_code", "evidence_sha256", "withdrawn_at"],
+      "properties": {
+        "release_id": { "type": "string" },
+        "withdrawal_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+        "reason_code": { "enum": ["compromise", "malware", "policy", "operator_request", "superseded"] },
+        "evidence_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "withdrawn_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

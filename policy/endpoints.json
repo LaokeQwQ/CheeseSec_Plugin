@@ -1,0 +1,21 @@
+{
+  "api_version": "store.cheesesec.com/v1",
+  "default_external_egress": "deny",
+  "online_access": {
+    "requires_password_confirmation": true,
+    "requires_socket_lease": true,
+    "audit_required": true,
+    "max_lease_seconds": 600
+  },
+  "endpoints": [
+    { "id": "store", "base_url": "https://store.cheesesec.com", "role": "catalog", "methods": ["GET", "HEAD"], "immutable": false, "redirects": "deny", "credential_scope": "none", "path_policy": "versioned-index" },
+    { "id": "ota", "base_url": "https://ota.cheesesec.com", "role": "release-index", "methods": ["GET", "HEAD"], "immutable": false, "redirects": "deny", "credential_scope": "none", "path_policy": "versioned-index-revalidate" },
+    { "id": "resources", "base_url": "https://res.cheesesec.com", "role": "immutable-resource", "methods": ["GET", "HEAD"], "immutable": true, "redirects": "deny", "credential_scope": "none", "path_policy": "content-addressed-sha256" }
+  ],
+  "offline": {
+    "external_egress": "deny",
+    "network_requests": 0,
+    "required_inputs": ["crp", "trust-roots", "source-registry", "revocation-snapshot"],
+    "stale_revocation_behavior": "block-new-admission-keep-last-known-good"
+  }
+}

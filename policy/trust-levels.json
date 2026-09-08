@@ -1,0 +1,12 @@
+{
+  "api_version": "store.cheesesec.com/v1",
+  "capabilities_granted_by_trust": false,
+  "levels": [
+    { "id": "official", "namespace_pattern": "official/<plugin>", "root_scope": "cheesesec-vendor-root", "admission": "trusted", "normal_threshold": 2, "normal_total": 3, "high_risk_threshold": 3, "high_risk_total": 5, "max_key_lifetime_days": 1095, "administrator_confirmation": false },
+    { "id": "enterprise", "namespace_pattern": "enterprise/<org>/<plugin>", "root_scope": "enterprise-isolated-root", "admission": "trusted", "normal_threshold": 2, "normal_total": 3, "high_risk_threshold": 3, "high_risk_total": 5, "max_key_lifetime_days": 1095, "administrator_confirmation": false },
+    { "id": "community", "namespace_pattern": "community/<publisher>/<plugin>", "root_scope": "community-root", "admission": "needs_confirmation", "normal_threshold": 1, "normal_total": 1, "high_risk_threshold": 2, "high_risk_total": 2, "max_key_lifetime_days": 365, "administrator_confirmation": true },
+    { "id": "personal", "namespace_pattern": "personal/<owner>/<plugin>", "root_scope": "personal-root", "admission": "needs_confirmation", "normal_threshold": 1, "normal_total": 1, "high_risk_threshold": 2, "high_risk_total": 2, "max_key_lifetime_days": 365, "administrator_confirmation": true },
+    { "id": "test", "namespace_pattern": "test/<owner>/<plugin>", "root_scope": "test-root", "admission": "needs_confirmation", "normal_threshold": 1, "normal_total": 1, "high_risk_threshold": 2, "high_risk_total": 2, "max_key_lifetime_days": 30, "administrator_confirmation": true },
+    { "id": "development", "namespace_pattern": "development/<owner>/<plugin>", "root_scope": "development-root", "admission": "needs_confirmation", "normal_threshold": 1, "normal_total": 1, "high_risk_threshold": 2, "high_risk_total": 2, "max_key_lifetime_days": 7, "administrator_confirmation": true }
+  ]
+}

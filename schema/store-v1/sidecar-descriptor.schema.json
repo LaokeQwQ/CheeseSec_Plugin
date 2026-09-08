@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/store/v1/sidecar-descriptor.schema.json",
+  "title": "CheeseWAF 34A sidecar descriptor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "descriptor_id", "plugin_id", "runtime", "version", "manifest_identity", "artifact_identity", "namespace", "source", "source_root", "capabilities", "resources", "metadata"],
+  "properties": {
+    "api_version": { "const": "crp.cheesewaf.io/v1" },
+    "descriptor_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+    "plugin_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$" },
+    "runtime": { "const": "sidecar" },
+    "version": { "$ref": "#/$defs/version" },
+    "manifest_identity": { "$ref": "#/$defs/sha256" },
+    "artifact_identity": { "$ref": "#/$defs/sha256" },
+    "namespace": { "type": "string", "pattern": "^(official/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|enterprise/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|(community|personal|test|development)/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63})$" },
+    "source": { "$ref": "#/$defs/identifier" },
+    "source_root": { "$ref": "#/$defs/identifier" },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["observe", "candidate_snapshot", "hint", "health"] }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu_milli", "memory_bytes", "pids"],
+      "properties": {
+        "cpu_milli": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "memory_bytes": { "type": "integer", "minimum": 0, "maximum": 1099511627776 },
+        "pids": { "type": "integer", "minimum": 0, "maximum": 32768 }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request_path", "initial_mode", "egress", "activation_owner"],
+      "properties": {
+        "request_path": { "const": "asynchronous" },
+        "initial_mode": { "const": "observe" },
+        "egress": { "const": "deny" },
+        "activation_owner": { "const": "control-plane" }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$" },
+    "version": { "type": "string", "pattern": "^[0-9]+([.][0-9]+){0,2}([-][0-9A-Za-z.-]+)?([+][0-9A-Za-z.-]+)?$" }
+  }
+}

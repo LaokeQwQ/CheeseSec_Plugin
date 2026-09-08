@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/store/v1/cwedp.schema.json",
+  "title": "CheeseWAF Edge Distribution Protocol publication policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "protocol", "pull_only", "ansible_push", "source_kinds", "negotiation", "integrity", "promotion"],
+  "properties": {
+    "api_version": { "const": "ota.cheesesec.com/v1" },
+    "protocol": { "const": "cwedp/v1" },
+    "pull_only": { "const": true },
+    "ansible_push": { "const": false },
+    "source_kinds": { "const": ["ota", "seed", "peer", "offline-crp"] },
+    "negotiation": { "const": ["HELLO", "CAPABILITIES", "DistributionIntent"] },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_digests", "content_addressed_chunks", "signature_required", "source_quarantine"],
+      "properties": {
+        "required_digests": { "const": ["md5", "sha1", "sha256"] },
+        "content_addressed_chunks": { "const": true },
+        "signature_required": { "const": true },
+        "source_quarantine": { "const": true }
+      }
+    },
+    "promotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["install_upgrade_rollback_executor", "ansible_role"],
+      "properties": {
+        "install_upgrade_rollback_executor": { "const": "CWEDP" },
+        "ansible_role": { "const": "bootstrap-agent-only" }
+      }
+    }
+  }
+}

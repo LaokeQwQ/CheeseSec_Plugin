@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ota.cheesesec.com/schema/store/v1/ota.schema.json",
+  "title": "CheeseSec pull-only OTA index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "index_sequence", "mode", "releases"],
+  "properties": {
+    "api_version": { "const": "ota.cheesesec.com/v1" },
+    "index_sequence": { "type": "integer", "minimum": 0 },
+    "mode": { "const": "pull-only" },
+    "releases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["release_id", "release_sequence", "version", "crp_sha256", "resource_url"],
+        "properties": {
+          "release_id": { "type": "string" },
+          "release_sequence": { "type": "integer", "minimum": 0 },
+          "version": { "type": "string" },
+          "crp_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "resource_url": { "type": "string", "pattern": "^https://res[.]cheesesec[.]com/sha256/[0-9a-f]{64}/[A-Za-z0-9._+-]+$" }
+        }
+      },
+      "uniqueItems": true
+    }
+  }
+}

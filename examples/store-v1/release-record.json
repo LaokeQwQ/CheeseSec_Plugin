@@ -1,0 +1,48 @@
+{
+  "api_version": "store.cheesesec.com/v1",
+  "record_type": "contract-example",
+  "release_id": "official/demo@1.0.0#1",
+  "plugin_id": "demo",
+  "namespace": "official/demo",
+  "trust_level": "official",
+  "version": "1.0.0",
+  "source": "offline",
+  "source_root": "vendor-root-v1",
+  "release_sequence": 1,
+  "immutable": true,
+  "high_risk": false,
+  "crp": {
+    "size": 16,
+    "digests": {
+      "md5": "289440fb0fd416e276e3e56ca8d3381b",
+      "sha1": "a3ff74bc19323703a1c46830fafebbf24b39d62c",
+      "sha256": "f9a4a659b12d21729d3ad297151fbf77c3e0519ea6fddc68a139c8945c01925d"
+    },
+    "resource_url": "https://res.cheesesec.com/sha256/f9a4a659b12d21729d3ad297151fbf77c3e0519ea6fddc68a139c8945c01925d/demo-v1.crp"
+  },
+  "artifact": {
+    "name": "payload.txt",
+    "size": 16,
+    "digests": {
+      "md5": "289440fb0fd416e276e3e56ca8d3381b",
+      "sha1": "a3ff74bc19323703a1c46830fafebbf24b39d62c",
+      "sha256": "f9a4a659b12d21729d3ad297151fbf77c3e0519ea6fddc68a139c8945c01925d"
+    }
+  },
+  "manifest_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "signature_set_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "descriptor_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "provenance_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+  "review": {
+    "review_id": "review-demo-contract",
+    "decision": "approved",
+    "reviewers": ["security-reviewer", "release-reviewer"],
+    "evidence_sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+  },
+  "signature_evidence": {
+    "status": "unsigned_example",
+    "required_signatures": 2,
+    "valid_key_ids": [],
+    "verification_report_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+  }
+}

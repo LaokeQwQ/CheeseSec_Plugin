@@ -1,0 +1,6 @@
+{
+  "api_version": "ota.cheesesec.com/v1",
+  "index_sequence": 0,
+  "mode": "pull-only",
+  "releases": []
+}

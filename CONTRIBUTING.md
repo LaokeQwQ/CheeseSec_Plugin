@@ -39,6 +39,12 @@ Ansible 只负责基础设施和分发代理的 bootstrap；插件安装、升�
 
 在线资源使用 store.cheesesec.com、ota.cheesesec.com 和 res.cheesesec.com。离线交付使用签名的 .crp 包；离线集群必须能仅凭本地包、信任根、吊销清单和审计策略完成验证。
 
+商店和 OTA 的可发布记录位于 catalog/、ota/ 和 policy/。发布前必须运行
+scripts/validate_commercial_contracts.py；它会拒绝未绑定 SHA-256 内容地址的资源、
+不匹配的信任级别、改写或删除历史 release、撤回后继续出现在 OTA 的版本、WASM
+sidecar 和 Ansible CRP push。离线导入的结构预检可使用
+scripts/verify_offline_import.py，该命令只读取本地输入，不安装、不激活、不联网。
+
 ## 供应链安全
 
 构建环境应固定依赖并记录来源，签名密钥与构建环境分离，发布前检查摘要、签名阈值、来源根、吊销状态和版本降级。发现来源异常、摘要变化或签名不一致时必须停止推广并保留证据。
