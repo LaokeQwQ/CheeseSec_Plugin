@@ -16,6 +16,9 @@ The executable v1 manifest fields are `api_version`, `kind`, `name`,
 `release_sequence`, `digests`, and `artifact` (with `name`, `size`, and
 `digests`). Unknown JSON fields are rejected. `source` must be registered when
 the package goes through `Import`; `release_sequence` must not move backwards.
+The publication schema and signature schema are maintained in
+[`schema/crp-v1/`](schema/crp-v1/); schema validation does not replace
+cryptographic signature or source-root admission.
 
 The minimal, parseable layout example is maintained in
 [`CheeseSec_Plugin_Docs/examples/crp-v1/`](https://github.com/LaokeQwQ/CheeseSec_Plugin_Docs/tree/main/examples/crp-v1).
@@ -34,6 +37,24 @@ sequence, and staged promotion. Capability permissions are a separate policy
 layer; they are not v1 manifest fields. A catalog entry never grants runtime
 capability. This repository does not currently contain a runnable catalog
 service or CRP installer.
+
+## Publication checks
+
+The publication-side CRP v1 schemas live in `schema/crp-v1/`. Run the same
+checks as CI before opening a change:
+
+```sh
+python3 -m venv /tmp/cheesesec-plugin-ci
+/tmp/cheesesec-plugin-ci/bin/pip install -r requirements-ci.txt
+/tmp/cheesesec-plugin-ci/bin/python scripts/check_workflow_policy.py
+/tmp/cheesesec-plugin-ci/bin/python scripts/validate_repo.py
+/tmp/cheesesec-plugin-ci/bin/python scripts/secret_scan.py
+git diff --check
+```
+
+The pinned `jsonschema` package is CI-only. It must not be copied into a CRP
+bundle or CheeseWAF runtime. `.crp` archives, signing material, and local
+state are ignored by Git and rejected by the release-artifact scan.
 
 ## DuckDB 分析扩展边界（规划）
 

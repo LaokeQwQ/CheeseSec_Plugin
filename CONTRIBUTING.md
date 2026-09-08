@@ -10,6 +10,23 @@
 - 版本必须遵循 SemVer，并保持 release_sequence 单调递增。镜像和 OTA 索引不得改写包身份或摘要。
 - 变更必须同步变更记录，并说明影响范围、回滚版本和离线发布方式。
 
+## 本地门禁
+
+修改 schema、目录或发布脚本后，应运行：
+
+```sh
+python3 -m venv /tmp/cheesesec-plugin-ci
+/tmp/cheesesec-plugin-ci/bin/pip install -r requirements-ci.txt
+/tmp/cheesesec-plugin-ci/bin/python scripts/check_workflow_policy.py
+/tmp/cheesesec-plugin-ci/bin/python scripts/validate_repo.py
+/tmp/cheesesec-plugin-ci/bin/python scripts/secret_scan.py
+git diff --check
+```
+
+`schema/crp-v1/` 是当前 CRP v1 的发布侧 schema。CI 会检查 schema 本身、
+仓库内 JSON、未来加入的 examples，以及私钥、Token 和 `.crp` 产物。
+验证依赖仅用于 CI，不得打进插件包或 CheeseWAF 运行时。
+
 ## 信任与审批
 
 官方和企业发布至少使用 2-of-3 签名；高风险发布使用 3-of-5。企业必须使用独立签名根。社区、个人、测试和开发发布不能自动获得高权限。

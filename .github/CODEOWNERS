@@ -1,0 +1,5 @@
+# Protect publication metadata, trust-boundary schemas, and CI policy.
+* @LaokeQwQ
+/.github/ @LaokeQwQ
+/schema/ @LaokeQwQ
+/scripts/ @LaokeQwQ

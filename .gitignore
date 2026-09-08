@@ -2,6 +2,11 @@
 *.key
 *.pem
 *.p12
+*.pfx
+*.gpg
+*.asc
+*.sig
+*.secret
 *.token
 .env
 .env.*
@@ -19,6 +24,10 @@ coverage/
 
 # Agent/editor tooling and OS files
 node_modules/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
 .DS_Store
 .idea/
 .vscode/

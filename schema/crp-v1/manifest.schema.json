@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/crp/v1/manifest.schema.json",
+  "title": "CheeseWAF CRP v1 manifest",
+  "description": "Strict publication manifest accepted by the current CheeseWAF CRP v1 parser.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "namespace",
+    "source_root",
+    "release_sequence",
+    "artifact"
+  ],
+  "properties": {
+    "api_version": {
+      "const": "crp.cheesewaf.io/v1"
+    },
+    "kind": {
+      "const": "CheeseWAFResourcePackage"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._-]{0,127}$"
+    },
+    "plugin_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+([.][0-9]+){0,2}([-][0-9A-Za-z.-]+)?([+][0-9A-Za-z.-]+)?$"
+    },
+    "namespace": {
+      "type": "string",
+      "oneOf": [
+        {
+          "pattern": "^official/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+        },
+        {
+          "pattern": "^enterprise/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+        },
+        {
+          "pattern": "^(community|personal|test|development)/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+        }
+      ]
+    },
+    "publisher": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$"
+    },
+    "source_root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$"
+    },
+    "release_sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "digests": {
+      "$ref": "#/$defs/digests"
+    },
+    "artifact": {
+      "$ref": "#/$defs/artifact"
+    }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "name"
+      ]
+    },
+    {
+      "required": [
+        "plugin_id"
+      ]
+    }
+  ],
+  "allOf": [
+    {
+      "anyOf": [
+        {
+          "required": [
+            "digests"
+          ]
+        },
+        {
+          "properties": {
+            "artifact": {
+              "required": [
+                "digests"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "$defs": {
+    "digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "md5",
+        "sha1",
+        "sha256"
+      ],
+      "properties": {
+        "md5": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "sha1": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "size"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,254}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1073741824
+        },
+        "digests": {
+          "$ref": "#/$defs/digests"
+        }
+      }
+    }
+  }
+}

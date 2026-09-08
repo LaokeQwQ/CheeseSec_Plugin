@@ -1,0 +1,21 @@
+{
+  "api_version": "crp.cheesewaf.io/v1",
+  "kind": "CheeseWAFResourcePackage",
+  "name": "demo",
+  "plugin_id": "demo",
+  "version": "1.0.0",
+  "namespace": "official/demo",
+  "publisher": "example",
+  "source": "offline",
+  "source_root": "vendor-root-v1",
+  "release_sequence": 1,
+  "artifact": {
+    "name": "payload.txt",
+    "size": 16,
+    "digests": {
+      "md5": "289440fb0fd416e276e3e56ca8d3381b",
+      "sha1": "a3ff74bc19323703a1c46830fafebbf24b39d62c",
+      "sha256": "f9a4a659b12d21729d3ad297151fbf77c3e0519ea6fddc68a139c8945c01925d"
+    }
+  }
+}
