@@ -1,0 +1,15 @@
+{
+  "api_version": "crp.cheesewaf.io/v1",
+  "descriptor_id": "official-demo-1.0.0",
+  "plugin_id": "demo",
+  "runtime": "sidecar",
+  "version": "1.0.0",
+  "manifest_identity": "0000000000000000000000000000000000000000000000000000000000000000",
+  "artifact_identity": "1111111111111111111111111111111111111111111111111111111111111111",
+  "namespace": "official/demo",
+  "source": "offline",
+  "source_root": "vendor-root-v1",
+  "capabilities": ["observe", "candidate_snapshot", "hint", "health"],
+  "resources": { "cpu_milli": 100, "memory_bytes": 67108864, "pids": 32 },
+  "metadata": { "request_path": "asynchronous", "initial_mode": "observe", "egress": "deny", "activation_owner": "control-plane" }
+}

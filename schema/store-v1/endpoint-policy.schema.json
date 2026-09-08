@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/store/v1/endpoint-policy.schema.json",
+  "title": "CheeseSec store, OTA and resource endpoint policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "default_external_egress", "online_access", "endpoints", "offline"],
+  "properties": {
+    "api_version": { "const": "store.cheesesec.com/v1" },
+    "default_external_egress": { "const": "deny" },
+    "online_access": { "$ref": "#/$defs/online" },
+    "endpoints": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/endpoint" }
+    },
+    "offline": { "$ref": "#/$defs/offline" }
+  },
+  "$defs": {
+    "online": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requires_password_confirmation", "requires_socket_lease", "audit_required", "max_lease_seconds"],
+      "properties": {
+        "requires_password_confirmation": { "const": true },
+        "requires_socket_lease": { "const": true },
+        "audit_required": { "const": true },
+        "max_lease_seconds": { "const": 600 }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "base_url", "role", "methods", "immutable", "redirects", "credential_scope", "path_policy"],
+      "properties": {
+        "id": { "enum": ["store", "ota", "resources"] },
+        "base_url": { "type": "string", "pattern": "^https://(store|ota|res)[.]cheesesec[.]com$" },
+        "role": { "enum": ["catalog", "release-index", "immutable-resource"] },
+        "methods": { "const": ["GET", "HEAD"] },
+        "immutable": { "type": "boolean" },
+        "redirects": { "const": "deny" },
+        "credential_scope": { "const": "none" },
+        "path_policy": { "enum": ["versioned-index", "versioned-index-revalidate", "content-addressed-sha256"] }
+      }
+    },
+    "offline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["external_egress", "network_requests", "required_inputs", "stale_revocation_behavior"],
+      "properties": {
+        "external_egress": { "const": "deny" },
+        "network_requests": { "const": 0 },
+        "required_inputs": {
+          "type": "array",
+          "items": { "enum": ["crp", "trust-roots", "source-registry", "revocation-snapshot"] },
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "stale_revocation_behavior": { "const": "block-new-admission-keep-last-known-good" }
+      }
+    }
+  }
+}

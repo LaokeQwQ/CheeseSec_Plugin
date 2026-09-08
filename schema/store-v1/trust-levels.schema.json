@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/store/v1/trust-levels.schema.json",
+  "title": "CheeseSec publication trust levels",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "capabilities_granted_by_trust", "levels"],
+  "properties": {
+    "api_version": { "const": "store.cheesesec.com/v1" },
+    "capabilities_granted_by_trust": { "const": false },
+    "levels": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "$ref": "#/$defs/level" }
+    }
+  },
+  "$defs": {
+    "level": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "namespace_pattern", "root_scope", "admission", "normal_threshold", "normal_total", "high_risk_threshold", "high_risk_total", "max_key_lifetime_days", "administrator_confirmation"],
+      "properties": {
+        "id": { "enum": ["official", "enterprise", "community", "personal", "test", "development"] },
+        "namespace_pattern": { "type": "string", "minLength": 1 },
+        "root_scope": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+        "admission": { "enum": ["trusted", "needs_confirmation"] },
+        "normal_threshold": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "normal_total": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "high_risk_threshold": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "high_risk_total": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "max_key_lifetime_days": { "type": "integer", "minimum": 1, "maximum": 1095 },
+        "administrator_confirmation": { "type": "boolean" }
+      }
+    }
+  }
+}

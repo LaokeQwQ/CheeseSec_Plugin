@@ -56,6 +56,36 @@ The pinned `jsonschema` package is CI-only. It must not be copied into a CRP
 bundle or CheeseWAF runtime. `.crp` archives, signing material, and local
 state are ignored by Git and rejected by the release-artifact scan.
 
+## Commercial publication skeleton
+
+The machine-readable contract under policy/, catalog/, ota/, and schema/store-v1/
+is the smallest fail-closed publication surface:
+
+- policy/trust-levels.json defines official, enterprise, community, personal,
+  test, and development admission and signature thresholds. Trust level never
+  grants runtime capability.
+- policy/endpoints.json fixes store.cheesesec.com, ota.cheesesec.com, and
+  res.cheesesec.com to GET/HEAD pulls; resources are SHA-256 content-addressed
+  and immutable. Online access requires a short socket lease, confirmation, and
+  audit; offline mode makes zero network requests.
+- catalog/index.json and ota/index.json start empty. A future release must
+  bind namespace@version#release_sequence, CRP/manifest/signature/descriptor/
+  provenance digests, review evidence, and verified signature evidence. Release
+  records are append-only; withdrawal is an evidence-bearing event.
+- policy/cwedp.json makes CWEDP the only install/upgrade/rollback executor.
+  Ansible may bootstrap the pull agent but cannot push CRP. The sidecar schema
+  fixes 34A asynchronous, observe-first, egress-denied execution and rejects
+  WASM/in-process runtime claims.
+
+Run the commercial gate together with the CRP checks:
+
+    /tmp/cheesesec-plugin-ci/bin/python scripts/validate_commercial_contracts.py
+    /tmp/cheesesec-plugin-ci/bin/python scripts/verify_offline_import.py --help
+
+examples/store-v1/ is contract-only and contains no installable or published
+package. Actual offline verification and activation remain CheeseWAF runtime
+operations; this repository never stores private keys or generated .crp files.
+
 ## DuckDB 分析扩展边界（规划）
 
 DuckDB 仅作为可选的分析/审计 sidecar 或 CLI 扩展规划，不随 CheeseWAF 默认发行物附带，
