@@ -4,7 +4,8 @@
 
 ## 提交前检查
 
-- 每个条目必须保留 CRP manifest、SHA-256 内容摘要、MD5/SHA-1 传输摘要、签名集合、来源根、发布序号和 provenance。
+- 每个条目必须保留 CRP manifest、SHA-256 内容摘要、MD5/SHA-1 传输摘要、签名集合、来源根和发布序号。
+  provenance 作为当前 v1 归档之外的发布元数据保存；把 `provenance/` 放进归档属于 v2 变更，当前解析器会拒绝。
 - 不得提交私钥、密钥种子、Token、密码、客户数据、运行时状态或生成站点目录。提交前运行 git diff --check。
 - 版本必须遵循 SemVer，并保持 release_sequence 单调递增。镜像和 OTA 索引不得改写包身份或摘要。
 - 变更必须同步变更记录，并说明影响范围、回滚版本和离线发布方式。

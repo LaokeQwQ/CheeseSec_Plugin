@@ -3,6 +3,24 @@
 This repository is the catalog and release metadata source for CheeseSec
 plugins. Runtime code and the developer handbook live elsewhere.
 
+## Current CRP v1 boundary
+
+The current CheeseWAF parser accepts a ZIP archive with exactly three entry
+types: `manifest.json`, one regular `artifact/<file>`, and
+`signatures/manifest.json`. Unknown entries are rejected. `provenance/`, SBOM,
+build records, target API, platform, and permission fields are v2 or extension
+planning; they are not part of the current Get Started package.
+
+The executable v1 manifest fields are `api_version`, `kind`, `name`,
+`plugin_id`, `version`, `namespace`, `publisher`, `source`, `source_root`,
+`release_sequence`, `digests`, and `artifact` (with `name`, `size`, and
+`digests`). Unknown JSON fields are rejected. `source` must be registered when
+the package goes through `Import`; `release_sequence` must not move backwards.
+
+The minimal, parseable layout example is maintained in
+[`CheeseSec_Plugin_Docs/examples/crp-v1/`](https://github.com/LaokeQwQ/CheeseSec_Plugin_Docs/tree/main/examples/crp-v1).
+It has no valid signatures and cannot be installed.
+
 ## Publication endpoints
 
 - Catalog: `https://store.cheesesec.com`
@@ -10,10 +28,12 @@ plugins. Runtime code and the developer handbook live elsewhere.
 - Immutable resources: `https://res.cheesesec.com`
 - Offline packages: signed `.crp` (CheeseWAF Resources Package) bundles
 
-Each package is checked by CheeseWAF before activation. Checks include the
-manifest, SHA-256 identity, MD5/SHA-1 transfer digests, signature threshold,
-source-root binding, revocation, version sequence, permissions, and staged
-promotion. A catalog entry never grants runtime capability.
+The CheeseWAF admission layers check the manifest, SHA-256 identity, MD5/SHA-1
+transfer digests, signature threshold, source-root binding, revocation, version
+sequence, and staged promotion. Capability permissions are a separate policy
+layer; they are not v1 manifest fields. A catalog entry never grants runtime
+capability. This repository does not currently contain a runnable catalog
+service or CRP installer.
 
 ## DuckDB 分析扩展边界（规划）
 

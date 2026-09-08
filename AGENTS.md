@@ -10,5 +10,8 @@
   `codex-acp`.
 - Ansible may bootstrap infrastructure and a distribution agent only. CRP
   installation, upgrade, and rollback use CWEDP.
-- Every package must retain its manifest, signature set, source root, digest,
-  release sequence, and provenance without rewriting by mirrors or peers.
+- Every publication record must retain its manifest, signature set, source root,
+  digest, release sequence, and provenance metadata without rewriting by mirrors
+  or peers. For current CRP v1, provenance is kept outside the archive; adding
+  a `provenance/` archive entry is a v2 change and will be rejected by the
+  current parser.
