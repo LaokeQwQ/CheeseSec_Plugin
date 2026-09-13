@@ -1,8 +1,6 @@
 name: repository-checks
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -26,6 +24,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -45,6 +45,18 @@ jobs:
 
       - name: Validate schemas and repository JSON
         run: python scripts/validate_repo.py
+
+      - name: Validate store, OTA, sidecar and CWEDP contracts
+        run: python scripts/validate_commercial_contracts.py --base-ref origin/main
+
+      - name: Validate offline verifier entry point
+        run: python scripts/verify_offline_import.py --help
+
+      - name: Run contract tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate deterministic R2 publication bundle
+        run: python -m unittest tests.test_publication_bundle -v
 
       - name: Scan repository files for secrets and release artifacts
         run: python scripts/secret_scan.py

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/store/v1/release.schema.json",
+  "title": "CheeseSec immutable release record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "record_type", "release_id", "plugin_id", "namespace", "trust_level", "version", "source", "source_root", "release_sequence", "immutable", "crp", "artifact", "manifest_sha256", "signature_set_sha256", "descriptor_sha256", "provenance_sha256", "review", "signature_evidence"],
+  "properties": {
+    "api_version": { "const": "store.cheesesec.com/v1" },
+    "record_type": { "enum": ["publication", "contract-example"] },
+    "release_id": { "type": "string", "pattern": "^(official|enterprise|community|personal|test|development)/[A-Za-z0-9][A-Za-z0-9_./:-]*@[0-9]+([.][0-9]+){0,2}#[0-9]+$" },
+    "plugin_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$" },
+    "namespace": { "type": "string", "pattern": "^(official/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|enterprise/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|(community|personal|test|development)/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63})$" },
+    "trust_level": { "enum": ["official", "enterprise", "community", "personal", "test", "development"] },
+    "version": { "$ref": "#/$defs/version" },
+    "source": { "$ref": "#/$defs/identifier" },
+    "source_root": { "$ref": "#/$defs/identifier" },
+    "release_sequence": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+    "immutable": { "const": true },
+    "high_risk": { "type": "boolean", "default": false },
+    "crp": { "$ref": "#/$defs/blob" },
+    "artifact": { "$ref": "#/$defs/artifact" },
+    "manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "signature_set_sha256": { "$ref": "#/$defs/sha256" },
+    "descriptor_sha256": { "$ref": "#/$defs/sha256" },
+    "provenance_sha256": { "$ref": "#/$defs/sha256" },
+    "review": { "$ref": "#/$defs/review" },
+    "signature_evidence": { "$ref": "#/$defs/signature" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "md5": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$" },
+    "version": { "type": "string", "pattern": "^[0-9]+([.][0-9]+){0,2}([-][0-9A-Za-z.-]+)?([+][0-9A-Za-z.-]+)?$" },
+    "digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["md5", "sha1", "sha256"],
+      "properties": { "md5": { "$ref": "#/$defs/md5" }, "sha1": { "$ref": "#/$defs/sha1" }, "sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "blob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["size", "digests", "resource_url"],
+      "properties": {
+        "size": { "type": "integer", "minimum": 0, "maximum": 1073741824 },
+        "digests": { "$ref": "#/$defs/digests" },
+        "resource_url": { "type": "string", "pattern": "^https://res[.]cheesesec[.]com/sha256/[0-9a-f]{64}/[A-Za-z0-9._+-]+$" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "size", "digests"],
+      "properties": { "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,254}$" }, "size": { "type": "integer", "minimum": 0, "maximum": 1073741824 }, "digests": { "$ref": "#/$defs/digests" } }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["review_id", "decision", "reviewers", "evidence_sha256"],
+      "properties": {
+        "review_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+        "decision": { "enum": ["draft", "approved", "rejected", "withdrawn"] },
+        "reviewers": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" }, "uniqueItems": true },
+        "evidence_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+        "required": ["status", "required_signatures", "valid_key_ids", "verification_report_sha256", "manifest_sha256", "signature_set_sha256", "source_root", "trust_level", "release_sequence", "valid_until"],
+      "properties": {
+        "status": { "enum": ["verified", "needs_confirmation", "rejected", "unsigned_example"] },
+        "required_signatures": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "valid_key_ids": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" }, "uniqueItems": true },
+        "verification_report_sha256": { "$ref": "#/$defs/sha256" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "signature_set_sha256": { "$ref": "#/$defs/sha256" },
+        "source_root": { "$ref": "#/$defs/identifier" },
+        "trust_level": { "enum": ["official", "enterprise", "community", "personal", "test", "development"] },
+        "release_sequence": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+        "valid_until": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

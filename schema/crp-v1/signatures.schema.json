@@ -10,7 +10,13 @@
     "required": [
       "key_id",
       "algorithm",
-      "value"
+      "value",
+      "source_root",
+      "trust_level",
+      "release_sequence",
+      "manifest_sha256",
+      "signed_at",
+      "expires_at"
     ],
     "properties": {
       "key_id": {
@@ -27,7 +33,29 @@
         "minLength": 1,
         "pattern": "^[A-Za-z0-9+/]+={0,2}$"
       },
+      "source_root": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$"
+      },
+      "trust_level": {
+        "enum": ["official", "enterprise", "community", "personal", "test", "development"]
+      },
+      "release_sequence": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 18446744073709551615
+      },
+      "manifest_sha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
       "signed_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "expires_at": {
         "type": "string",
         "format": "date-time"
       }

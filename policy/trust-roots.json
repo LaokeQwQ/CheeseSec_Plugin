@@ -1,0 +1,35 @@
+{
+  "api_version": "store.cheesesec.com/v1",
+  "roots": [
+    {
+      "key_id": "official-demo-1",
+      "algorithm": "ed25519",
+      "public_key": "PUjCFCKYB9YV2tgkiQDd2pNBlUpNgRQMO583Ko9mzOA=",
+      "trust_level": "official",
+      "source_root": "vendor-root-v1",
+      "status": "active",
+      "valid_from": "2025-01-01T00:00:00Z",
+      "valid_until": "2028-01-01T00:00:00Z"
+    },
+    {
+      "key_id": "official-demo-2",
+      "algorithm": "ed25519",
+      "public_key": "tmQm994lexosH4k6EH7gLBXxYlumFzYiRnEwsmw6q78=",
+      "trust_level": "official",
+      "source_root": "vendor-root-v1",
+      "status": "active",
+      "valid_from": "2025-01-01T00:00:00Z",
+      "valid_until": "2028-01-01T00:00:00Z"
+    },
+    {
+      "key_id": "official-demo-3",
+      "algorithm": "ed25519",
+      "public_key": "/1MakVqwi68Wgo9iG8QX2GOYaSMoD1EttOWJLsMWGlA=",
+      "trust_level": "official",
+      "source_root": "vendor-root-v1",
+      "status": "active",
+      "valid_from": "2025-01-01T00:00:00Z",
+      "valid_until": "2028-01-01T00:00:00Z"
+    }
+  ]
+}

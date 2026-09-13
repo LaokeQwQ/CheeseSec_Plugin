@@ -18,11 +18,13 @@ The executable v1 manifest fields are `api_version`, `kind`, `name`,
 the package goes through `Import`; `release_sequence` must not move backwards.
 The publication schema and signature schema are maintained in
 [`schema/crp-v1/`](schema/crp-v1/); schema validation does not replace
-cryptographic signature or source-root admission.
+cryptographic signature or source-root admission. The offline validator also
+verifies Ed25519 signatures against local trust roots and validity windows.
 
-The minimal, parseable layout example is maintained in
+The minimal, parseable and cryptographically verifiable layout example is maintained in
 [`CheeseSec_Plugin_Docs/examples/crp-v1/`](https://github.com/LaokeQwQ/CheeseSec_Plugin_Docs/tree/main/examples/crp-v1).
-It has no valid signatures and cannot be installed.
+It contains two official Ed25519 signatures but remains contract-only and
+cannot be installed without runtime admission and CWEDP gates.
 
 ## Publication endpoints
 
@@ -30,6 +32,19 @@ It has no valid signatures and cannot be installed.
 - OTA indexes: `https://ota.cheesesec.com`
 - Immutable resources: `https://res.cheesesec.com`
 - Offline packages: signed `.crp` (CheeseWAF Resources Package) bundles
+
+The edge route contract fixes the public paths and object keys:
+
+| Host | Paths | Cache class |
+|---|---|---|
+| `store.cheesesec.com` | `/v1/catalog/index.json`, `/v1/policy/*.json`, `/v1/schema/{store,crp}/*.schema.json` | short revalidation |
+| `ota.cheesesec.com` | `/v1/channels/{stable,canary,dev}/index.json` | short revalidation |
+| `res.cheesesec.com` | `/sha256/{sha256}/{filename}` | immutable |
+
+These hosts are public `GET`/`HEAD` read surfaces. They do not accept plugin
+credentials or forward unknown paths to the CheeseWAF server. The complete
+Pages, Worker, R2, Tunnel, and origin split is documented in
+[`CheeseSec_Plugin_Docs/docs/cloudflare-routing.en.md`](https://github.com/LaokeQwQ/CheeseSec_Plugin_Docs/blob/main/docs/cloudflare-routing.en.md).
 
 The CheeseWAF admission layers check the manifest, SHA-256 identity, MD5/SHA-1
 transfer digests, signature threshold, source-root binding, revocation, version
@@ -55,6 +70,39 @@ git diff --check
 The pinned `jsonschema` package is CI-only. It must not be copied into a CRP
 bundle or CheeseWAF runtime. `.crp` archives, signing material, and local
 state are ignored by Git and rejected by the release-artifact scan.
+`policy/trust-roots.json`, `policy/source-registry.json`, and
+`policy/revocations.json` are public verification inputs only; private signing
+keys remain offline.
+
+## Commercial publication skeleton
+
+The machine-readable contract under policy/, catalog/, ota/, and schema/store-v1/
+is the smallest fail-closed publication surface:
+
+- policy/trust-levels.json defines official, enterprise, community, personal,
+  test, and development admission and signature thresholds. Trust level never
+  grants runtime capability.
+- policy/endpoints.json fixes store.cheesesec.com, ota.cheesesec.com, and
+  res.cheesesec.com to GET/HEAD pulls; resources are SHA-256 content-addressed
+  and immutable. Online access requires a short socket lease, confirmation, and
+  audit; offline mode makes zero network requests.
+- catalog/index.json and ota/index.json start empty. A future release must
+  bind namespace@version#release_sequence, CRP/manifest/signature/descriptor/
+  provenance digests, review evidence, and verified signature evidence. Release
+  records are append-only; withdrawal is an evidence-bearing event.
+- policy/cwedp.json makes CWEDP the only install/upgrade/rollback executor.
+  Ansible may bootstrap the pull agent but cannot push CRP. The sidecar schema
+  fixes 34A asynchronous, observe-first, egress-denied execution and rejects
+  WASM/in-process runtime claims.
+
+Run the commercial gate together with the CRP checks:
+
+    /tmp/cheesesec-plugin-ci/bin/python scripts/validate_commercial_contracts.py
+    /tmp/cheesesec-plugin-ci/bin/python scripts/verify_offline_import.py --help
+
+examples/store-v1/ is contract-only and contains no installable or published
+package. Actual offline verification and activation remain CheeseWAF runtime
+operations; this repository never stores private keys or generated .crp files.
 
 ## DuckDB 分析扩展边界（规划）
 
