@@ -1,7 +1,7 @@
 # Version-pinned only for local repository checks. These packages are not
 # runtime dependencies and are never included in a CRP artifact. The Linux CI
 # runner additionally uses requirements-ci-linux.txt with wheel hashes.
-attrs==24.2.0
+attrs==26.1.0
 jsonschema==4.26.0
 jsonschema-specifications==2023.12.1
 referencing==0.35.1
