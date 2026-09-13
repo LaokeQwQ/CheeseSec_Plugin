@@ -69,12 +69,18 @@
     "signature": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "required_signatures", "valid_key_ids", "verification_report_sha256"],
+        "required": ["status", "required_signatures", "valid_key_ids", "verification_report_sha256", "manifest_sha256", "signature_set_sha256", "source_root", "trust_level", "release_sequence", "valid_until"],
       "properties": {
         "status": { "enum": ["verified", "needs_confirmation", "rejected", "unsigned_example"] },
         "required_signatures": { "type": "integer", "minimum": 0, "maximum": 5 },
         "valid_key_ids": { "type": "array", "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" }, "uniqueItems": true },
-        "verification_report_sha256": { "$ref": "#/$defs/sha256" }
+        "verification_report_sha256": { "$ref": "#/$defs/sha256" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "signature_set_sha256": { "$ref": "#/$defs/sha256" },
+        "source_root": { "$ref": "#/$defs/identifier" },
+        "trust_level": { "enum": ["official", "enterprise", "community", "personal", "test", "development"] },
+        "release_sequence": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+        "valid_until": { "type": "string", "format": "date-time" }
       }
     }
   }

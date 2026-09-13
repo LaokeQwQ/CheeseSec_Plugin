@@ -18,11 +18,13 @@ The executable v1 manifest fields are `api_version`, `kind`, `name`,
 the package goes through `Import`; `release_sequence` must not move backwards.
 The publication schema and signature schema are maintained in
 [`schema/crp-v1/`](schema/crp-v1/); schema validation does not replace
-cryptographic signature or source-root admission.
+cryptographic signature or source-root admission. The offline validator also
+verifies Ed25519 signatures against local trust roots and validity windows.
 
-The minimal, parseable layout example is maintained in
+The minimal, parseable and cryptographically verifiable layout example is maintained in
 [`CheeseSec_Plugin_Docs/examples/crp-v1/`](https://github.com/LaokeQwQ/CheeseSec_Plugin_Docs/tree/main/examples/crp-v1).
-It has no valid signatures and cannot be installed.
+It contains two official Ed25519 signatures but remains contract-only and
+cannot be installed without runtime admission and CWEDP gates.
 
 ## Publication endpoints
 
@@ -68,6 +70,9 @@ git diff --check
 The pinned `jsonschema` package is CI-only. It must not be copied into a CRP
 bundle or CheeseWAF runtime. `.crp` archives, signing material, and local
 state are ignored by Git and rejected by the release-artifact scan.
+`policy/trust-roots.json`, `policy/source-registry.json`, and
+`policy/revocations.json` are public verification inputs only; private signing
+keys remain offline.
 
 ## Commercial publication skeleton
 

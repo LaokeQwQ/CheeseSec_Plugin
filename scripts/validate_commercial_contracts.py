@@ -8,14 +8,21 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import re
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator, FormatChecker
+
+try:
+    from scripts.signature_verifier import verify_signature_set
+except ModuleNotFoundError:
+    from signature_verifier import verify_signature_set
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = ROOT / "schema" / "store-v1"
@@ -45,8 +52,11 @@ def load_contracts() -> dict[str, Any]:
         "sidecar_example": ROOT / "examples" / "store-v1" / "sidecar-descriptor.json",
         "release_example": ROOT / "examples" / "store-v1" / "release-record.json",
         "offline_import": ROOT / "policy" / "offline-import.json",
+        "trust_roots": ROOT / "policy" / "trust-roots.json",
+        "source_registry": ROOT / "policy" / "source-registry.json",
+        "revocations": ROOT / "policy" / "revocations.json",
     }
-    for schema in ("trust-levels", "endpoint-policy", "cwedp", "release", "catalog", "ota", "sidecar-descriptor", "offline-import"):
+    for schema in ("trust-levels", "endpoint-policy", "cwedp", "release", "catalog", "ota", "sidecar-descriptor", "offline-import", "trust-roots", "source-registry", "revocations"):
         paths[f"{schema}_schema"] = SCHEMA_DIR / f"{schema}.schema.json"
     contracts = {name: strict_load(path) for name, path in paths.items()}
     # Short aliases keep callers focused on the contract rather than its file name.
@@ -98,6 +108,27 @@ def validate_release_record(record: dict[str, Any], contracts: dict[str, Any], *
         required = record["signature_evidence"]["required_signatures"]
         if len(record["signature_evidence"]["valid_key_ids"]) < required or required == 0:
             raise ValueError(f"release {record['release_id']}: verified release lacks its signature threshold")
+        evidence = record["signature_evidence"]
+        if evidence["source_root"] != record["source_root"] or evidence["trust_level"] != record["trust_level"]:
+            raise ValueError(f"release {record['release_id']}: signature evidence identity is not bound")
+        if evidence["release_sequence"] != record["release_sequence"]:
+            raise ValueError(f"release {record['release_id']}: signature evidence release sequence is not bound")
+        if evidence["manifest_sha256"] != record["manifest_sha256"] or evidence["signature_set_sha256"] != record["signature_set_sha256"]:
+            raise ValueError(f"release {record['release_id']}: signature evidence digest binding is not exact")
+        roots = {root["key_id"]: root for root in contracts["trust_roots"]["roots"]}
+        try:
+            evidence_until = datetime.fromisoformat(evidence["valid_until"].replace("Z", "+00:00"))
+            current = datetime.now(timezone.utc)
+            if evidence_until <= current and published:
+                raise ValueError(f"release {record['release_id']}: signature evidence is expired")
+            for key_id in evidence["valid_key_ids"]:
+                root_until = datetime.fromisoformat(roots[key_id]["valid_until"].replace("Z", "+00:00"))
+                if evidence_until > root_until:
+                    raise ValueError(f"release {record['release_id']}: signature evidence exceeds root validity")
+        except (KeyError, TypeError, ValueError) as exc:
+            if isinstance(exc, ValueError) and str(exc).startswith("release "):
+                raise
+            raise ValueError(f"release {record['release_id']}: invalid signature evidence validity") from exc
     elif published:
         raise ValueError(f"release {record['release_id']}: published release must have verified signatures")
     if published and record["review"]["decision"] != "approved":
@@ -112,8 +143,28 @@ def validate_contracts(contracts: dict[str, Any], *, base: dict[str, Any] | None
     _schema_validate(contracts["cwedp"], contracts["cwedp_schema"], "CWEDP policy")
     _schema_validate(contracts["sidecar_example"], contracts["sidecar-descriptor_schema"], "sidecar descriptor")
     _schema_validate(contracts["offline_import"], contracts["offline-import_schema"], "offline import policy")
+    _schema_validate(contracts["trust_roots"], contracts["trust-roots_schema"], "trust roots")
+    _schema_validate(contracts["source_registry"], contracts["source-registry_schema"], "source registry")
+    _schema_validate(contracts["revocations"], contracts["revocations_schema"], "revocation snapshot")
     _schema_validate(contracts["release_example"], contracts["release_schema"], "release example")
     validate_release_record(contracts["release_example"], contracts, published=False)
+    example_manifest = ROOT / "examples" / "crp-v1" / "manifest.json"
+    example_signatures = ROOT / "examples" / "crp-v1" / "signatures" / "manifest.json"
+    verification = verify_signature_set(
+        example_manifest.read_bytes(),
+        example_signatures.read_bytes(),
+        contracts["trust_roots"],
+        contracts["source_registry"],
+        contracts["revocations"],
+        now=datetime.now(timezone.utc),
+    )
+    example_record = contracts["release_example"]
+    if verification["manifest_sha256"] != example_record["manifest_sha256"]:
+        raise ValueError("release example manifest digest is not bound to the signed manifest")
+    if hashlib.sha256(example_signatures.read_bytes()).hexdigest() != example_record["signature_set_sha256"]:
+        raise ValueError("release example signature set digest is not bound to the signed signature set")
+    if verification["source_root"] != example_record["source_root"] or verification["release_sequence"] != example_record["release_sequence"]:
+        raise ValueError("release example signature identity is not bound")
     _schema_validate(contracts["catalog"], _catalog_schema(contracts), "catalog index")
     _schema_validate(contracts["ota"], contracts["ota_schema"], "OTA index")
 
@@ -178,6 +229,9 @@ def validate_contracts(contracts: dict[str, Any], *, base: dict[str, Any] | None
         release_ids.add(release["release_id"])
     withdrawal_ids: set[str] = set()
     withdrawn_releases: set[str] = set()
+    release_by_id = {release["release_id"]: release for release in releases}
+    previous_withdrawal_hash: str | None = None
+    expected_withdrawal_sequence = 1
     for withdrawal in contracts["catalog"]["withdrawals"]:
         if withdrawal["withdrawal_id"] in withdrawal_ids:
             raise ValueError(f"duplicate withdrawal_id: {withdrawal['withdrawal_id']}")
@@ -186,9 +240,21 @@ def validate_contracts(contracts: dict[str, Any], *, base: dict[str, Any] | None
             raise ValueError(f"withdrawal refers to a release that is not retained: {withdrawal['release_id']}")
         if withdrawal["release_id"] in withdrawn_releases:
             raise ValueError(f"release has more than one withdrawal event: {withdrawal['release_id']}")
+        release = release_by_id[withdrawal["release_id"]]
+        if withdrawal["release_sequence"] != release["release_sequence"] or withdrawal["source_root"] != release["source_root"]:
+            raise ValueError(f"withdrawal identity is not bound: {withdrawal['withdrawal_id']}")
+        if withdrawal["event_sequence"] != expected_withdrawal_sequence:
+            raise ValueError(f"withdrawal event sequence must be contiguous: {withdrawal['withdrawal_id']}")
+        if withdrawal["previous_event_sha256"] != previous_withdrawal_hash:
+            raise ValueError(f"withdrawal hash chain is broken: {withdrawal['withdrawal_id']}")
+        canonical = dict(withdrawal)
+        canonical.pop("record_sha256", None)
+        if hashlib.sha256(_canonical(canonical).encode("utf-8")).hexdigest() != withdrawal["record_sha256"]:
+            raise ValueError(f"withdrawal record hash is invalid: {withdrawal['withdrawal_id']}")
         withdrawn_releases.add(withdrawal["release_id"])
+        previous_withdrawal_hash = withdrawal["record_sha256"]
+        expected_withdrawal_sequence += 1
     ota_ids: set[str] = set()
-    release_by_id = {release["release_id"]: release for release in releases}
     for entry in contracts["ota"]["releases"]:
         if entry["release_id"] in ota_ids:
             raise ValueError(f"duplicate OTA release_id: {entry['release_id']}")
@@ -200,6 +266,8 @@ def validate_contracts(contracts: dict[str, Any], *, base: dict[str, Any] | None
             raise ValueError(f"OTA entry changed release identity: {entry['release_id']}")
         if entry["crp_sha256"] != release["crp"]["digests"]["sha256"] or entry["resource_url"] != release["crp"]["resource_url"]:
             raise ValueError(f"OTA entry changed immutable CRP reference: {entry['release_id']}")
+        if (entry["manifest_sha256"], entry["signature_set_sha256"], entry["source_root"], entry["trust_level"], entry["signature_status"]) != (release["manifest_sha256"], release["signature_set_sha256"], release["source_root"], release["trust_level"], "verified"):
+            raise ValueError(f"OTA entry changed signature or source-root binding: {entry['release_id']}")
     if base is not None:
         validate_append_only(base, contracts)
 

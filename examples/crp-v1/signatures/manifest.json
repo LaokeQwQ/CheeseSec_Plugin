@@ -1,1 +1,24 @@
-[]
+[
+  {
+    "key_id": "official-demo-1",
+    "algorithm": "ed25519",
+    "value": "VvSMR9BTwgMpUp2KULVaMSdlA8PsGKnmTswj/pXjZp7wwQ44jVxR83u+uq97JydZuX8ETLd6vE3sQ19CQgc3DQ==",
+    "source_root": "vendor-root-v1",
+    "trust_level": "official",
+    "release_sequence": 1,
+    "manifest_sha256": "75ad97aecb15e3dd842bf32dd7a71c8f9e6bbe55fb7200b37c8efbe6643e4216",
+    "signed_at": "2026-01-15T00:00:00Z",
+    "expires_at": "2028-01-01T00:00:00Z"
+  },
+  {
+    "key_id": "official-demo-2",
+    "algorithm": "ed25519",
+    "value": "hWQ0ft3CEOdifmh9Y3J2dU/a+EP7T79nfJjdPiUUJWsYLjqEnRvCHMpwVd10RfumBYcYk7I+6eAOHw0hom56Cg==",
+    "source_root": "vendor-root-v1",
+    "trust_level": "official",
+    "release_sequence": 1,
+    "manifest_sha256": "75ad97aecb15e3dd842bf32dd7a71c8f9e6bbe55fb7200b37c8efbe6643e4216",
+    "signed_at": "2026-01-15T00:00:00Z",
+    "expires_at": "2028-01-01T00:00:00Z"
+  }
+]
