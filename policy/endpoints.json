@@ -8,9 +8,53 @@
     "max_lease_seconds": 600
   },
   "endpoints": [
-    { "id": "store", "base_url": "https://store.cheesesec.com", "role": "catalog", "methods": ["GET", "HEAD"], "immutable": false, "redirects": "deny", "credential_scope": "none", "path_policy": "versioned-index" },
-    { "id": "ota", "base_url": "https://ota.cheesesec.com", "role": "release-index", "methods": ["GET", "HEAD"], "immutable": false, "redirects": "deny", "credential_scope": "none", "path_policy": "versioned-index-revalidate" },
-    { "id": "resources", "base_url": "https://res.cheesesec.com", "role": "immutable-resource", "methods": ["GET", "HEAD"], "immutable": true, "redirects": "deny", "credential_scope": "none", "path_policy": "content-addressed-sha256" }
+    {
+      "id": "store",
+      "base_url": "https://store.cheesesec.com",
+      "role": "catalog",
+      "methods": ["GET", "HEAD"],
+      "immutable": false,
+      "redirects": "deny",
+      "credential_scope": "none",
+      "path_policy": "versioned-index",
+      "paths": [
+        "/v1/catalog/index.json",
+        "/v1/policy/endpoints.json",
+        "/v1/policy/trust-roots.json",
+        "/v1/policy/source-registry.json",
+        "/v1/policy/revocations.json",
+        "/v1/schema/store/{name}.schema.json",
+        "/v1/schema/crp/{name}.schema.json"
+      ],
+      "cache_class": "short-revalidate",
+      "origin_role": "edge-public-r2"
+    },
+    {
+      "id": "ota",
+      "base_url": "https://ota.cheesesec.com",
+      "role": "release-index",
+      "methods": ["GET", "HEAD"],
+      "immutable": false,
+      "redirects": "deny",
+      "credential_scope": "none",
+      "path_policy": "versioned-index-revalidate",
+      "paths": ["/v1/channels/{channel}/index.json"],
+      "cache_class": "short-revalidate",
+      "origin_role": "edge-public-r2"
+    },
+    {
+      "id": "resources",
+      "base_url": "https://res.cheesesec.com",
+      "role": "immutable-resource",
+      "methods": ["GET", "HEAD"],
+      "immutable": true,
+      "redirects": "deny",
+      "credential_scope": "none",
+      "path_policy": "content-addressed-sha256",
+      "paths": ["/sha256/{sha256}/{filename}"],
+      "cache_class": "immutable",
+      "origin_role": "edge-public-r2"
+    }
   ],
   "offline": {
     "external_egress": "deny",

@@ -32,7 +32,7 @@
     "endpoint": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "base_url", "role", "methods", "immutable", "redirects", "credential_scope", "path_policy"],
+      "required": ["id", "base_url", "role", "methods", "immutable", "redirects", "credential_scope", "path_policy", "paths", "cache_class", "origin_role"],
       "properties": {
         "id": { "enum": ["store", "ota", "resources"] },
         "base_url": { "type": "string", "pattern": "^https://(store|ota|res)[.]cheesesec[.]com$" },
@@ -41,7 +41,19 @@
         "immutable": { "type": "boolean" },
         "redirects": { "const": "deny" },
         "credential_scope": { "const": "none" },
-        "path_policy": { "enum": ["versioned-index", "versioned-index-revalidate", "content-addressed-sha256"] }
+        "path_policy": { "enum": ["versioned-index", "versioned-index-revalidate", "content-addressed-sha256"] },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9{}._/-]+$",
+            "not": { "pattern": "//|\\\\|%" }
+          }
+        },
+        "cache_class": { "enum": ["short-revalidate", "immutable"] },
+        "origin_role": { "const": "edge-public-r2" }
       }
     },
     "offline": {

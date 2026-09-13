@@ -31,6 +31,19 @@ It has no valid signatures and cannot be installed.
 - Immutable resources: `https://res.cheesesec.com`
 - Offline packages: signed `.crp` (CheeseWAF Resources Package) bundles
 
+The edge route contract fixes the public paths and object keys:
+
+| Host | Paths | Cache class |
+|---|---|---|
+| `store.cheesesec.com` | `/v1/catalog/index.json`, `/v1/policy/*.json`, `/v1/schema/{store,crp}/*.schema.json` | short revalidation |
+| `ota.cheesesec.com` | `/v1/channels/{stable,canary,dev}/index.json` | short revalidation |
+| `res.cheesesec.com` | `/sha256/{sha256}/{filename}` | immutable |
+
+These hosts are public `GET`/`HEAD` read surfaces. They do not accept plugin
+credentials or forward unknown paths to the CheeseWAF server. The complete
+Pages, Worker, R2, Tunnel, and origin split is documented in
+[`CheeseSec_Plugin_Docs/docs/cloudflare-routing.en.md`](https://github.com/LaokeQwQ/CheeseSec_Plugin_Docs/blob/main/docs/cloudflare-routing.en.md).
+
 The CheeseWAF admission layers check the manifest, SHA-256 identity, MD5/SHA-1
 transfer digests, signature threshold, source-root binding, revocation, version
 sequence, and staged promotion. Capability permissions are a separate policy
