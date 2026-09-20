@@ -25,6 +25,12 @@ def main() -> int:
             findings.append(f"{relative}: workflow must declare permissions: {{}}")
         if re.search(r"\bsecrets\.[A-Za-z0-9_]+", text):
             findings.append(f"{relative}: CI validation must not access repository secrets")
+        if re.search(r"\b(?:curl|wget)\b[^\n]*(?:\||bash|sh)", text, re.IGNORECASE):
+            findings.append(f"{relative}: remote scripts must not be executed in CI")
+        if re.search(r"\bpip(?:3)?\s+install\b", text) and "--require-hashes" not in text:
+            findings.append(f"{relative}: pip installs must use --require-hashes")
+        if "actions/checkout@" in text and "persist-credentials: false" not in text:
+            findings.append(f"{relative}: checkout must disable persisted credentials")
         for reference in ACTION_REF.findall(text):
             if "@" not in reference:
                 findings.append(f"{relative}: action reference is missing an immutable SHA: {reference}")

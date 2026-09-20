@@ -52,6 +52,46 @@ class CommercialContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.validate_append_only(previous, current)
 
+    def test_release_example_carries_verified_signature_evidence(self) -> None:
+        contracts = contract_module().load_contracts()
+        evidence = contracts["release_example"]["signature_evidence"]
+        self.assertEqual(evidence["status"], "verified")
+        self.assertGreaterEqual(len(evidence["valid_key_ids"]), evidence["required_signatures"])
+        self.assertEqual(evidence["source_root"], contracts["release_example"]["source_root"])
+        self.assertEqual(evidence["trust_level"], contracts["release_example"]["trust_level"])
+
+    def test_ota_binding_requires_signature_and_source_root(self) -> None:
+        contracts = contract_module().load_contracts()
+        ota_schema = contracts["ota_schema"]
+        required = set(ota_schema["properties"]["releases"]["items"]["required"])
+        self.assertTrue({"signature_set_sha256", "manifest_sha256", "source_root", "trust_level"} <= required)
+
+    def test_withdrawal_record_hash_chain_is_immutable(self) -> None:
+        module = contract_module()
+        contracts = module.load_contracts()
+        release = copy.deepcopy(contracts["release_example"])
+        release["record_type"] = "publication"
+        event = {
+            "release_id": release["release_id"],
+            "withdrawal_id": "withdraw-demo-1",
+            "reason_code": "policy",
+            "evidence_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+            "withdrawn_at": "2026-02-01T00:00:00Z",
+            "event_sequence": 1,
+            "previous_event_sha256": None,
+            "source_root": release["source_root"],
+            "release_sequence": release["release_sequence"],
+        }
+        event["record_sha256"] = __import__("hashlib").sha256(module._canonical(event).encode()).hexdigest()
+        current = copy.deepcopy(contracts)
+        current["catalog"]["releases"] = [release]
+        current["catalog"]["withdrawals"] = [event]
+        current["ota"]["releases"] = []
+        module.validate_contracts(current)
+        event["reason_code"] = "malware"
+        with self.assertRaises(ValueError):
+            module.validate_contracts(current)
+
 
 if __name__ == "__main__":
     unittest.main()

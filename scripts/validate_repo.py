@@ -6,10 +6,16 @@ import hashlib
 import json
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator, FormatChecker
+
+try:
+    from scripts.signature_verifier import verify_signature_set
+except ModuleNotFoundError:  # direct script execution from the scripts directory
+    from signature_verifier import verify_signature_set
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = ROOT / "schema" / "crp-v1"
@@ -75,6 +81,30 @@ def validate_signature_example(path: Path, validator: Draft202012Validator) -> N
     errors = sorted(validator.iter_errors(instance), key=lambda error: list(error.path))
     if errors:
         raise ValueError(f"{path}: {errors[0].message}")
+    if not instance:
+        raise ValueError(f"{path}: empty signature sets cannot be publication examples")
+
+
+def validate_signature_binding(manifest_path: Path) -> None:
+    policy_dir = ROOT / "policy"
+    roots = strict_load(policy_dir / "trust-roots.json")
+    sources = strict_load(policy_dir / "source-registry.json")
+    revocations = strict_load(policy_dir / "revocations.json")
+    signature_path = manifest_path.parent / "signatures" / "manifest.json"
+    artifact_dir = manifest_path.parent / "artifact"
+    candidates = [item for item in artifact_dir.iterdir() if item.is_file() and not item.is_symlink()]
+    if len(candidates) != 1:
+        raise ValueError(f"{manifest_path}: expected one artifact for signature verification")
+    result = verify_signature_set(
+        manifest_path.read_bytes(),
+        signature_path.read_bytes(),
+        roots,
+        sources,
+        revocations,
+        now=datetime.now(timezone.utc),
+    )
+    if result["manifest_sha256"] != hashlib.sha256(manifest_path.read_bytes()).hexdigest():
+        raise ValueError(f"{manifest_path}: signature verifier returned an inconsistent manifest digest")
 
 
 def main() -> int:
@@ -101,6 +131,7 @@ def main() -> int:
         if path.parent.name == "signatures":
             continue
         validate_example(path, manifest_validator)
+        validate_signature_binding(path)
         print(f"manifest example ok: {path.relative_to(ROOT)}")
     for path in sorted(ROOT.glob("examples/**/signatures/manifest.json")):
         validate_signature_example(path, signatures_validator)

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/store/v1/revocations.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "snapshot_sequence", "events"],
+  "properties": {
+    "api_version": { "const": "store.cheesesec.com/v1" },
+    "snapshot_sequence": { "type": "integer", "minimum": 0 },
+    "events": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "event_sequence", "action", "recorded_at", "evidence_sha256", "record_sha256"],
+        "properties": {
+          "event_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+          "event_sequence": { "type": "integer", "minimum": 1 },
+          "action": { "enum": ["revoke-key", "revoke-release", "withdraw-release", "suspend-root"] },
+          "key_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+          "release_id": { "type": "string" },
+          "recorded_at": { "type": "string", "format": "date-time" },
+          "evidence_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "previous_event_sha256": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^[0-9a-f]{64}$" }] },
+          "record_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        },
+        "anyOf": [{ "required": ["key_id"] }, { "required": ["release_id"] }]
+      }
+    }
+  }
+}

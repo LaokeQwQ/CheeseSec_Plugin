@@ -15,13 +15,18 @@
     "withdrawal": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["release_id", "withdrawal_id", "reason_code", "evidence_sha256", "withdrawn_at"],
+        "required": ["release_id", "withdrawal_id", "reason_code", "evidence_sha256", "withdrawn_at", "event_sequence", "previous_event_sha256", "record_sha256", "source_root", "release_sequence"],
       "properties": {
         "release_id": { "type": "string" },
         "withdrawal_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
         "reason_code": { "enum": ["compromise", "malware", "policy", "operator_request", "superseded"] },
         "evidence_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "withdrawn_at": { "type": "string", "format": "date-time" }
+        "withdrawn_at": { "type": "string", "format": "date-time" },
+        "event_sequence": { "type": "integer", "minimum": 0 },
+        "previous_event_sha256": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^[0-9a-f]{64}$" }] },
+        "record_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "source_root": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$" },
+        "release_sequence": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 }
       }
     }
   }
