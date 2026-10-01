@@ -247,6 +247,16 @@ class ExtensionContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.validate_messages(policy, descriptors, schemas, mutated)
 
+        mutated = copy.deepcopy(fixtures)
+        mutated["analysis_record"]["window"]["from"] = "2026-10-01T07:59:00Z"
+        with self.assertRaisesRegex(ValueError, "inside the input snapshot window"):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["analysis_record"]["window"]["to"] = "2026-10-01T09:01:00Z"
+        with self.assertRaisesRegex(ValueError, "inside the input snapshot window"):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
         mutated = copy.deepcopy(fixtures["waf_security_event"])
         mutated["metadata"]["raw_request_body"] = "forbidden"
         with self.assertRaises(ValueError):

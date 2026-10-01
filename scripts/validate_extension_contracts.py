@@ -465,6 +465,12 @@ def validate_messages(
     snapshot_start = _parse_datetime(snapshot["window"]["from"], "audit_parquet.window.from")
     snapshot_end = _parse_datetime(snapshot["window"]["to"], "audit_parquet.window.to")
     _assert(snapshot_start < snapshot_end, "audit_parquet window.to must be after window.from")
+    analysis_start = _parse_datetime(analysis_record["window"]["from"], "analysis_record.window.from")
+    analysis_end = _parse_datetime(analysis_record["window"]["to"], "analysis_record.window.to")
+    _assert(
+        snapshot_start <= analysis_start < analysis_end <= snapshot_end,
+        "analysis_record window must be inside the input snapshot window",
+    )
     _assert(
         _parse_datetime(snapshot["created_at"], "audit_parquet.created_at") >= snapshot_end,
         "audit_parquet snapshot must be created after its data window",

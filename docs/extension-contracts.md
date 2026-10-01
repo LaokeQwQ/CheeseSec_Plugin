@@ -51,11 +51,13 @@ WAF 事件必须经 CheeseWAF 核心认证的内部事件通道传输，并在�
 
 DuckDB 扩展是 `host-provided` 的异步 one-shot 分析作业，不是常驻 sidecar/CLI：
 
-- 只读取异步生成的脱敏 Parquet 快照；`audit-parquet/v1` 签名清单绑定行 schema、固定
-  列集、UTC 时间窗、zstd 压缩、分片行数/大小/SHA-256 和不含宿主路径的 opaque file refs；
+- 只读取 CheeseWAF 受信审计导出器异步生成的脱敏 Parquet 快照；运行器必须在 DuckDB 打开文件前
+  验证清单签名、信任根/撤销状态、每个文件的实际 SHA-256 与大小，并核对租户/站点范围、行数、
+  schema 和时间窗。`audit-parquet/v1` 清单绑定固定列集、UTC 时间窗、zstd 压缩和 opaque file refs；
+  不接受用户上传或其他不受信写入者生成的 Parquet 文件；
 - Parquet 行只暴露 `occurred_at`、`event_type`、`tenant_ref`、`site_ref`、`route_ref`、
   `subject_hash`、`severity`、`evidence_refs`、`count`，不包含原始 URL、请求体、Cookie、
-  Authorization、Token 或任意扩展列；输入文件只能来自受信 CheeseWAF 审计导出器；
+  Authorization、Token 或任意扩展列；
 - 插件包只携带签名审查过的参数化模板 `duckdb-template:security-summary-v1`；运行器预注册
   `audit_events` 只读关系，不执行任意插件/用户 SQL，也不允许多语句、`ATTACH`、`COPY`、
   `INSTALL`、`LOAD` 或未经核准的 DuckDB 扩展；
@@ -69,11 +71,13 @@ DuckDB 扩展是 `host-provided` 的异步 one-shot 分析作业，不是常驻 
 - 不进入请求热路径，不写 PG、native-raft 或 Redis，不创建持久 DuckDB 数据库，不共享可写
   数据库文件，不开放监听端口；唯一输出为 `analysis-record/v1`。记录绑定输入 manifest
   的紧凑排序 JSON 摘要、模板引用与文件摘要、DuckDB 版本和执行 profile 摘要；
-  核心校验并审计结果，不允许 DuckDB 直接改变 WAF 策略或产出候选快照。
+  记录时间窗必须位于输入快照时间窗内。`contain`、`isolate` 等 recommendation 只是分析标签，
+  不能转成 `risk-hint`、ACL、挑战、封禁或策略更新；核心只校验并审计结果，不允许 DuckDB
+  直接改变 WAF 策略或产出候选快照。
 
 `examples/extensions/duckdb-analysis/security-summary.sql` 是未发布的模板样例。仓库门禁只
-校验固定文件摘要和记录字段之间的绑定，不证明模板已签名、审查、沙箱执行或产生了真实结果；
-这些能力仍需由 CheeseWAF 发布与作业监督实现。
+校验固定文件摘要、分析时间窗和记录字段之间的绑定，不证明清单/输出签名已验、Parquet 文件已
+读取校验、模板已签名审查、沙箱已执行或结果真实；这些能力仍需由 CheeseWAF 发布与作业监督实现。
 
 DuckDB 是嵌入式引擎，没有进程内权限边界；SQL 能访问文件、网络和扩展。因此不能把只读
 连接或 `network.mode=deny` 声明当作沙箱。规划参考 DuckDB 的
