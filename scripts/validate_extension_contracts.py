@@ -19,12 +19,52 @@ MESSAGE_SCHEMA_FILES = {
     "risk_hint": MESSAGE_SCHEMA_ROOT / "risk-hint.schema.json",
     "waf_security_event": MESSAGE_SCHEMA_ROOT / "waf-security-event.schema.json",
     "analysis_record": MESSAGE_SCHEMA_ROOT / "analysis-record.schema.json",
+    "audit_parquet": MESSAGE_SCHEMA_ROOT / "audit-parquet.schema.json",
 }
 MESSAGE_FIXTURE_ROOT = ROOT / "examples" / "extensions" / "messages"
 MESSAGE_FIXTURE_FILES = {
     "risk_hint": MESSAGE_FIXTURE_ROOT / "risk-hint.json",
     "waf_security_event": MESSAGE_FIXTURE_ROOT / "waf-security-event.json",
     "analysis_record": MESSAGE_FIXTURE_ROOT / "analysis-record.json",
+    "audit_parquet": MESSAGE_FIXTURE_ROOT / "audit-parquet.json",
+}
+DUCKDB_ROW_SCHEMA_PATH = MESSAGE_SCHEMA_ROOT / "audit-event-row.schema.json"
+DUCKDB_ROW_FIXTURE_PATH = MESSAGE_FIXTURE_ROOT / "audit-event-row.json"
+DUCKDB_EXECUTION_PROFILE = {
+    "profile_id": "duckdb-read-only-snapshot-v1",
+    "runtime_isolation": "os-sandbox",
+    "query_artifact": "reviewed-signed-template",
+    "allow_arbitrary_sql": False,
+    "allowed_relation": "audit_events",
+    "snapshot_access": "manifest-refs-allowlist",
+    "persistent_database": False,
+    "network_egress": "deny",
+    "filesystem": {
+        "snapshot_mount": "read-only",
+        "temporary_workspace": "isolated-bounded",
+        "other_host_paths": "deny",
+    },
+    "duckdb_settings": {
+        "enable_external_access": False,
+        "allowed_paths": "manifest-only",
+        "allow_community_extensions": False,
+        "autoload_known_extensions": False,
+        "autoinstall_known_extensions": False,
+        "lock_configuration": True,
+    },
+    "limits": {
+        "wall_time_seconds": 30,
+        "cpu_milli": 1000,
+        "process_memory_bytes": 1073741824,
+        "duckdb_memory_bytes": 805306368,
+        "pids": 64,
+        "threads": 1,
+        "input_bytes": 104857600,
+        "temporary_bytes": 536870912,
+        "max_parallel_jobs": 1,
+        "max_output_rows": 10000,
+        "max_output_bytes": 1048576,
+    },
 }
 
 
@@ -81,6 +121,19 @@ def load_message_contracts(policy: dict[str, Any] | None = None) -> tuple[dict[s
     schemas = {name: strict_load(ROOT / bindings[name]["file"]) for name in MESSAGE_SCHEMA_FILES}
     fixtures = {name: strict_load(ROOT / bindings[name]["fixture"]) for name in MESSAGE_FIXTURE_FILES}
     return schemas, fixtures
+
+
+def load_duckdb_row_contract(policy: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    expected = {
+        "row_schema": "cheesewaf/audit-event-row/v1",
+        "row_schema_file": str(DUCKDB_ROW_SCHEMA_PATH.relative_to(ROOT)),
+        "row_fixture": str(DUCKDB_ROW_FIXTURE_PATH.relative_to(ROOT)),
+    }
+    duckdb_policy = policy.get("duckdb")
+    _assert(isinstance(duckdb_policy, dict), "DuckDB policy is missing")
+    for field, value in expected.items():
+        _assert(duckdb_policy.get(field) == value, f"DuckDB row schema binding changed: {field}")
+    return strict_load(ROOT / expected["row_schema_file"]), strict_load(ROOT / expected["row_fixture"])
 
 
 def _assert(condition: bool, message: str) -> None:
@@ -141,14 +194,27 @@ def validate_descriptor(descriptor: dict[str, Any], schema: dict[str, Any], poli
     elif deployment == "host-provided":
         _assert(extension_class == "analytics", f"{label}: host-provided is reserved for analytics")
         config = instance["deployment_config"]
-        _assert(set(config) == {"provider", "version_range", "artifact_policy", "database_read_only"}, f"{label}: DuckDB config has unexpected fields")
+        _assert(set(config) == {"provider", "version_range", "artifact_policy", "persistent_database", "query_policy_ref"}, f"{label}: DuckDB config has unexpected fields")
         _assert(config["provider"] == policy["duckdb"]["provider"], f"{label}: analytics provider must be DuckDB")
         _assert(config["artifact_policy"] == policy["duckdb"]["artifact_policy"], f"{label}: DuckDB binary must be host-provided")
-        _assert(config["database_read_only"] is True, f"{label}: DuckDB must be read-only")
+        _assert(config["persistent_database"] is False, f"{label}: DuckDB must not persist a writable database")
+        _assert(config["query_policy_ref"] == policy["duckdb"]["query_policy_ref"], f"{label}: DuckDB query policy is not bound")
         _assert(network["mode"] == "deny" and network["allowed_targets"] == [], f"{label}: analytics must deny egress")
         _assert(lease == {"required": False, "max_ttl_seconds": 0, "max_requests": 0, "max_bytes": 0}, f"{label}: analytics must not request a lease")
         _assert(instance["input"]["schema"] == policy["duckdb"]["required_input_schema"], f"{label}: DuckDB input schema changed")
         _assert(instance["input"]["data_class"] == policy["duckdb"]["required_data_class"], f"{label}: DuckDB data class changed")
+        _assert(policy.get("duckdb_execution") == DUCKDB_EXECUTION_PROFILE, f"{label}: DuckDB execution isolation or limits changed")
+        _assert(config["query_policy_ref"] == DUCKDB_EXECUTION_PROFILE["profile_id"], f"{label}: DuckDB execution profile reference changed")
+        _assert(instance["output"]["max_bytes"] == DUCKDB_EXECUTION_PROFILE["limits"]["max_output_bytes"], f"{label}: DuckDB output byte limit is not bound")
+        _assert(
+            instance["resources"]
+            == {
+                "cpu_milli": DUCKDB_EXECUTION_PROFILE["limits"]["cpu_milli"],
+                "memory_bytes": DUCKDB_EXECUTION_PROFILE["limits"]["process_memory_bytes"],
+                "pids": DUCKDB_EXECUTION_PROFILE["limits"]["pids"],
+            },
+            f"{label}: DuckDB process resource limits are not bound",
+        )
     else:  # pragma: no cover - schema validation catches this first.
         raise ValueError(f"{label}: unsupported deployment")
 
@@ -197,6 +263,13 @@ def validate_messages(
         schema_validate(fixture, schema, f"message fixture {name}")
         _assert(fixture["api_version"] == binding["schema"], f"message fixture api_version changed: {name}")
 
+    row_schema, row_fixture = load_duckdb_row_contract(policy)
+    try:
+        Draft202012Validator.check_schema(row_schema)
+    except Exception as exc:
+        raise ValueError(f"DuckDB row schema is invalid: {exc}") from exc
+    schema_validate(row_fixture, row_schema, "DuckDB audit event row fixture")
+
     risk_hint = fixtures["risk_hint"]
     _assert(
         _parse_datetime(risk_hint["observed_at"], "risk_hint.observed_at")
@@ -218,6 +291,23 @@ def validate_messages(
         "analysis_record window.to must be after window.from",
     )
 
+    snapshot = fixtures["audit_parquet"]
+    snapshot_start = _parse_datetime(snapshot["window"]["from"], "audit_parquet.window.from")
+    snapshot_end = _parse_datetime(snapshot["window"]["to"], "audit_parquet.window.to")
+    _assert(snapshot_start < snapshot_end, "audit_parquet window.to must be after window.from")
+    _assert(
+        _parse_datetime(snapshot["created_at"], "audit_parquet.created_at") >= snapshot_end,
+        "audit_parquet snapshot must be created after its data window",
+    )
+    file_refs: set[str] = set()
+    for file_record in snapshot["files"]:
+        _assert(file_record["file_ref"] not in file_refs, "audit_parquet file_ref values must be unique")
+        file_refs.add(file_record["file_ref"])
+        file_start = _parse_datetime(file_record["window"]["from"], "audit_parquet file.window.from")
+        file_end = _parse_datetime(file_record["window"]["to"], "audit_parquet file.window.to")
+        _assert(snapshot_start <= file_start < file_end <= snapshot_end, "audit_parquet file window is outside the snapshot window")
+    _assert(sum(item["row_count"] for item in snapshot["files"]) == snapshot["total_row_count"], "audit_parquet total row count does not match file manifests")
+
     by_plugin = {descriptor["plugin_id"]: descriptor for descriptor in descriptors}
     _assert(risk_hint["plugin_id"] in by_plugin, "risk hint plugin is not declared")
     _assert(
@@ -233,6 +323,19 @@ def validate_messages(
         bindings["analysis_record"]["schema"] in duckdb["output"]["schemas"],
         "DuckDB plugin does not declare analysis-record output",
     )
+    _assert(analysis_record["plugin_id"] == duckdb["plugin_id"], "analysis record plugin is not DuckDB")
+    _assert(duckdb["input"]["schema"] == bindings["audit_parquet"]["schema"], "DuckDB input is not the snapshot manifest schema")
+    _assert(snapshot["row_schema"] == policy["duckdb"]["row_schema"], "audit snapshot row schema changed")
+    _assert(snapshot["columns"] == list(row_schema["properties"]), "audit snapshot column set/order does not match the row schema")
+    _assert(row_fixture["tenant_ref"] == snapshot["tenant_ref"], "audit row tenant does not match the snapshot")
+    _assert(row_fixture["site_ref"] in snapshot["site_refs"], "audit row site is outside the snapshot scope")
+    row_time = _parse_datetime(row_fixture["occurred_at"], "audit_event_row.occurred_at")
+    _assert(snapshot_start <= row_time < snapshot_end, "audit row timestamp is outside the snapshot window")
+    _assert(analysis_record["snapshot_ref"] == snapshot["snapshot_id"], "analysis record does not bind the input snapshot")
+    _assert(
+        sum(item["compressed_bytes"] for item in snapshot["files"]) <= duckdb["input"]["max_bytes"],
+        "audit snapshot exceeds the DuckDB descriptor input byte limit",
+    )
 
 
 def validate_contracts() -> list[str]:
@@ -241,6 +344,7 @@ def validate_contracts() -> list[str]:
     _assert(policy["api_version"] == schema["properties"]["api_version"]["const"], "extension policy api_version is not bound")
     _assert(policy["crp_v1_unchanged"] is True, "extension policy must preserve CRP v1")
     _assert(policy["direct_actions"] == [], "extension policy must forbid direct actions")
+    _assert(policy["duckdb"]["query_policy_ref"] == DUCKDB_EXECUTION_PROFILE["profile_id"], "DuckDB policy reference is not bound")
     _assert(len(descriptors) == 4, "expected four planned extension descriptors")
     ids: set[str] = set()
     for descriptor in descriptors:

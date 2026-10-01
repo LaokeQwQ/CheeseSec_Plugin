@@ -36,7 +36,11 @@
     "required_input_schema": "cheesewaf/audit-parquet/v1",
     "required_data_class": "redacted-audit-snapshot",
     "provider": "duckdb",
-    "artifact_policy": "host-provided"
+    "artifact_policy": "host-provided",
+    "row_schema": "cheesewaf/audit-event-row/v1",
+    "row_schema_file": "schema/extensions-v1/audit-event-row.schema.json",
+    "row_fixture": "examples/extensions/messages/audit-event-row.json",
+    "query_policy_ref": "duckdb-read-only-snapshot-v1"
   },
   "messages": {
     "risk_hint": {
@@ -53,6 +57,47 @@
       "schema": "cheesewaf/analysis-record/v1",
       "file": "schema/extensions-v1/analysis-record.schema.json",
       "fixture": "examples/extensions/messages/analysis-record.json"
+    },
+    "audit_parquet": {
+      "schema": "cheesewaf/audit-parquet/v1",
+      "file": "schema/extensions-v1/audit-parquet.schema.json",
+      "fixture": "examples/extensions/messages/audit-parquet.json"
+    }
+  },
+  "duckdb_execution": {
+    "profile_id": "duckdb-read-only-snapshot-v1",
+    "runtime_isolation": "os-sandbox",
+    "query_artifact": "reviewed-signed-template",
+    "allow_arbitrary_sql": false,
+    "allowed_relation": "audit_events",
+    "snapshot_access": "manifest-refs-allowlist",
+    "persistent_database": false,
+    "network_egress": "deny",
+    "filesystem": {
+      "snapshot_mount": "read-only",
+      "temporary_workspace": "isolated-bounded",
+      "other_host_paths": "deny"
+    },
+    "duckdb_settings": {
+      "enable_external_access": false,
+      "allowed_paths": "manifest-only",
+      "allow_community_extensions": false,
+      "autoload_known_extensions": false,
+      "autoinstall_known_extensions": false,
+      "lock_configuration": true
+    },
+    "limits": {
+      "wall_time_seconds": 30,
+      "cpu_milli": 1000,
+      "process_memory_bytes": 1073741824,
+      "duckdb_memory_bytes": 805306368,
+      "pids": 64,
+      "threads": 1,
+      "input_bytes": 104857600,
+      "temporary_bytes": 536870912,
+      "max_parallel_jobs": 1,
+      "max_output_rows": 10000,
+      "max_output_bytes": 1048576
     }
   },
   "forbidden_input_fields": [

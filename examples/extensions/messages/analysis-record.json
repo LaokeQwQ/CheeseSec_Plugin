@@ -3,7 +3,7 @@
   "record_id": "analysis:duckdb:20261001:0001",
   "plugin_id": "duckdb-analysis",
   "plugin_version": "1.0.0",
-  "snapshot_ref": "snapshot:parquet:20261001T090000Z",
+  "snapshot_ref": "snapshot:site-demo:20261001:0001",
   "generated_at": "2026-10-01T09:10:00Z",
   "window": { "from": "2026-10-01T08:00:00Z", "to": "2026-10-01T09:00:00Z" },
   "findings": [

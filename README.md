@@ -126,14 +126,18 @@ operations; this repository never stores private keys or generated .crp files.
 DuckDB 安装/热加载仍需在 CheeseWAF 阶段看板中单独验收。字段语义和数据流见
 [`docs/extension-contracts.md`](docs/extension-contracts.md)。
 
-消息边界也已固定为 `risk-hint/v1`、`waf-security-event/v1` 和
-`analysis-record/v1`，并分别提供 schema 与脱敏 fixture；fixture 只用于契约校验，
-不代表线上消息总线或签名密钥已经接入。
+消息边界也已固定为 `risk-hint/v1`、`waf-security-event/v1`、
+`analysis-record/v1` 和 `audit-parquet/v1`，并分别提供 schema 与脱敏 fixture；
+fixture 只用于契约校验，不代表线上消息总线或签名密钥已经接入。
 
 ## DuckDB 分析扩展边界（规划）
 
-DuckDB 仅作为可选的分析/审计 sidecar 或 CLI 扩展规划，不随 CheeseWAF 默认发行物附带，
-不进入请求热路径、PG、native-raft 或 Redis，也不提供常驻网络服务。日志由异步管道写入
-Parquet；分析进程仅读取快照，不能共享写入同一个数据库文件。扩展的 CRP 包、签名根和
-兼容矩阵以 CheeseSec_Plugin_Docs/docs/duckdb-extension.md 为准；该文档是契约和交付门禁，
-不表示扩展已经上线。
+DuckDB 仅作为可选分析/审计 sidecar 或 CLI 扩展规划，不随 CheeseWAF 默认发行物附带，
+不进入请求热路径、PG、native-raft 或 Redis，也不提供常驻网络服务。`audit-parquet/v1`
+清单绑定签名、摘要、大小、行数、列集和时间窗；快照文件只通过不含宿主路径的引用交付。
+插件只携带签名审查过的查询模板，不接受任意 SQL；宿主使用独立 OS 沙箱、只读快照挂载、
+无网络、无扩展自动加载及硬资源上限执行。DuckDB 官方安全模型也将 SQL 视为代码，要求用
+操作系统边界隔离不可信查询。兼容和交付门禁以
+CheeseSec_Plugin_Docs/docs/duckdb-extension.md 为准；本契约仍是规划，尚未接线或强制执行。
+参见 [DuckDB 安全模型](https://duckdb.org/security) 与
+[Securing DuckDB](https://duckdb.org/docs/current/operations_manual/securing_duckdb/overview)。

@@ -54,7 +54,7 @@ class ExtensionContractTests(unittest.TestCase):
         schema, policy, descriptors = module.load_contracts()
         duckdb = next(item for item in descriptors if item["class"] == "analytics")
         mutated = copy.deepcopy(duckdb)
-        mutated["deployment_config"]["database_read_only"] = False
+        mutated["deployment_config"]["persistent_database"] = True
         with self.assertRaises(ValueError):
             module.validate_descriptor(mutated, schema, policy)
 
@@ -76,6 +76,26 @@ class ExtensionContractTests(unittest.TestCase):
 
         mutated = copy.deepcopy(fixtures)
         mutated["risk_hint"]["expires_at"] = mutated["risk_hint"]["observed_at"]
+        with self.assertRaises(ValueError):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["audit_parquet"]["files"][0]["compressed_bytes"] = 104857601
+        with self.assertRaises(ValueError):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["audit_parquet"]["total_row_count"] = 5
+        with self.assertRaises(ValueError):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["audit_parquet"]["files"][0]["path"] = "/etc/passwd"
+        with self.assertRaises(ValueError):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["audit_parquet"]["columns"].append("raw_request_body")
         with self.assertRaises(ValueError):
             module.validate_messages(policy, descriptors, schemas, mutated)
 
@@ -103,6 +123,30 @@ class ExtensionContractTests(unittest.TestCase):
             module.load_message_contracts(mutated)
         with self.assertRaises(ValueError):
             module.validate_messages(mutated, descriptors)
+
+    def test_duckdb_requires_the_fixed_isolated_query_profile(self) -> None:
+        module = contract_module()
+        schema, policy, descriptors = module.load_contracts()
+        duckdb = next(item for item in descriptors if item["class"] == "analytics")
+        mutated = copy.deepcopy(policy)
+        mutated["duckdb_execution"]["allow_arbitrary_sql"] = True
+        with self.assertRaises(ValueError):
+            module.validate_descriptor(duckdb, schema, mutated)
+
+    def test_duckdb_row_schema_rejects_sensitive_columns_and_scope_escape(self) -> None:
+        module = contract_module()
+        _, policy, descriptors = module.load_contracts()
+        schemas, fixtures = module.load_message_contracts(policy)
+        row_schema, row_fixture = module.load_duckdb_row_contract(policy)
+        mutated_row = copy.deepcopy(row_fixture)
+        mutated_row["raw_request_body"] = "forbidden"
+        with self.assertRaises(ValueError):
+            module.schema_validate(mutated_row, row_schema, "mutated DuckDB row")
+
+        mutated_messages = copy.deepcopy(fixtures)
+        mutated_messages["audit_parquet"]["tenant_ref"] = "tenant:other"
+        with self.assertRaises(ValueError):
+            module.validate_messages(policy, descriptors, schemas, mutated_messages)
 
 if __name__ == "__main__":
     unittest.main()

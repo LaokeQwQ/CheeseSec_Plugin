@@ -119,7 +119,8 @@
         "model_ref": { "$ref": "#/$defs/identifier" },
         "version_range": { "type": "string", "minLength": 1, "maxLength": 128 },
         "artifact_policy": { "const": "host-provided" },
-        "database_read_only": { "const": true }
+        "persistent_database": { "const": false },
+        "query_policy_ref": { "$ref": "#/$defs/identifier" }
       }
     },
     "resources": {
