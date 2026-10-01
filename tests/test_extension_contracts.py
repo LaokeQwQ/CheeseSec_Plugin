@@ -72,10 +72,15 @@ class ExtensionContractTests(unittest.TestCase):
     def test_message_contracts_reject_invalid_time_windows_and_raw_fields(self) -> None:
         module = contract_module()
         _, policy, descriptors = module.load_contracts()
-        schemas, fixtures = module.load_message_contracts()
+        schemas, fixtures = module.load_message_contracts(policy)
 
         mutated = copy.deepcopy(fixtures)
         mutated["risk_hint"]["expires_at"] = mutated["risk_hint"]["observed_at"]
+        with self.assertRaises(ValueError):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["risk_hint"]["expires_at"] = "2026-10-01T10:00:00Z"
         with self.assertRaises(ValueError):
             module.validate_messages(policy, descriptors, schemas, mutated)
 
@@ -88,6 +93,16 @@ class ExtensionContractTests(unittest.TestCase):
         mutated["metadata"]["raw_request_body"] = "forbidden"
         with self.assertRaises(ValueError):
             module.schema_validate(mutated, schemas["waf_security_event"], "mutated WAF event")
+
+    def test_message_policy_paths_are_bound_to_validated_files(self) -> None:
+        module = contract_module()
+        _, policy, descriptors = module.load_contracts()
+        mutated = copy.deepcopy(policy)
+        mutated["messages"]["risk_hint"]["file"] = "../../outside.json"
+        with self.assertRaises(ValueError):
+            module.load_message_contracts(mutated)
+        with self.assertRaises(ValueError):
+            module.validate_messages(mutated, descriptors)
 
 if __name__ == "__main__":
     unittest.main()

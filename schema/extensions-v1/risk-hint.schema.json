@@ -49,7 +49,7 @@
       "properties": {
         "algorithm": { "const": "ed25519" },
         "key_id": { "$ref": "#/$defs/id" },
-        "value": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9+/]+={0,2}$" }
+        "value": { "type": "string", "minLength": 88, "maxLength": 88, "pattern": "^[A-Za-z0-9+/]{86}==$" }
       }
     }
   },

@@ -63,9 +63,23 @@ def load_contracts() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any
     return schema, policy, descriptors
 
 
-def load_message_contracts() -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
-    schemas = {name: strict_load(path) for name, path in MESSAGE_SCHEMA_FILES.items()}
-    fixtures = {name: strict_load(path) for name, path in MESSAGE_FIXTURE_FILES.items()}
+def load_message_contracts(policy: dict[str, Any] | None = None) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    if policy is None:
+        policy = strict_load(POLICY_PATH)
+    bindings = policy.get("messages")
+    _assert(isinstance(bindings, dict), "extension policy must bind message schemas")
+    _assert(set(bindings) == set(MESSAGE_SCHEMA_FILES), "message schema bindings are incomplete")
+    for name, binding in bindings.items():
+        _assert(
+            binding == {
+                "schema": f"cheesewaf/{name.replace('_', '-')}/v1" if name != "waf_security_event" else "cheesewaf/waf-security-event/v1",
+                "file": str(MESSAGE_SCHEMA_FILES[name].relative_to(ROOT)),
+                "fixture": str(MESSAGE_FIXTURE_FILES[name].relative_to(ROOT)),
+            },
+            f"message policy binding changed: {name}",
+        )
+    schemas = {name: strict_load(ROOT / bindings[name]["file"]) for name in MESSAGE_SCHEMA_FILES}
+    fixtures = {name: strict_load(ROOT / bindings[name]["fixture"]) for name in MESSAGE_FIXTURE_FILES}
     return schemas, fixtures
 
 
@@ -153,12 +167,24 @@ def validate_messages(
     fixtures: dict[str, dict[str, Any]] | None = None,
 ) -> None:
     if schemas is None or fixtures is None:
-        loaded_schemas, loaded_fixtures = load_message_contracts()
+        loaded_schemas, loaded_fixtures = load_message_contracts(policy)
         schemas = loaded_schemas if schemas is None else schemas
         fixtures = loaded_fixtures if fixtures is None else fixtures
     bindings = policy.get("messages")
     _assert(isinstance(bindings, dict), "extension policy must bind message schemas")
     _assert(set(bindings) == set(MESSAGE_SCHEMA_FILES), "message schema bindings are incomplete")
+    _assert(set(schemas) == set(MESSAGE_SCHEMA_FILES), "message schema set is incomplete")
+    _assert(set(fixtures) == set(MESSAGE_FIXTURE_FILES), "message fixture set is incomplete")
+    for name in MESSAGE_SCHEMA_FILES:
+        _assert(
+            bindings[name]
+            == {
+                "schema": f"cheesewaf/{name.replace('_', '-')}/v1" if name != "waf_security_event" else "cheesewaf/waf-security-event/v1",
+                "file": str(MESSAGE_SCHEMA_FILES[name].relative_to(ROOT)),
+                "fixture": str(MESSAGE_FIXTURE_FILES[name].relative_to(ROOT)),
+            },
+            f"message policy binding changed: {name}",
+        )
 
     for name, schema in schemas.items():
         binding = bindings[name]
@@ -176,6 +202,14 @@ def validate_messages(
         _parse_datetime(risk_hint["observed_at"], "risk_hint.observed_at")
         < _parse_datetime(risk_hint["expires_at"], "risk_hint.expires_at"),
         "risk_hint expires_at must be after observed_at",
+    )
+    risk_producer = next(item for item in descriptors if item["plugin_id"] == risk_hint["plugin_id"])
+    hint_ttl = _parse_datetime(risk_hint["expires_at"], "risk_hint.expires_at") - _parse_datetime(
+        risk_hint["observed_at"], "risk_hint.observed_at"
+    )
+    _assert(
+        hint_ttl.total_seconds() <= risk_producer["output"]["ttl_seconds"],
+        "risk_hint validity exceeds the producer descriptor ttl_seconds",
     )
     analysis_record = fixtures["analysis_record"]
     _assert(
@@ -214,7 +248,7 @@ def validate_contracts() -> list[str]:
         _assert(descriptor_id not in ids, f"duplicate descriptor_id: {descriptor_id}")
         ids.add(descriptor_id)
         validate_descriptor(descriptor, schema, policy)
-    message_schemas, message_fixtures = load_message_contracts()
+    message_schemas, message_fixtures = load_message_contracts(policy)
     validate_messages(policy, descriptors, message_schemas, message_fixtures)
     return sorted(ids)
 
