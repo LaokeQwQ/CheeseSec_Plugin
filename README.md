@@ -20,6 +20,11 @@ The publication schema and signature schema are maintained in
 [`schema/crp-v1/`](schema/crp-v1/); schema validation does not replace
 cryptographic signature or source-root admission. The offline validator also
 verifies Ed25519 signatures against local trust roots and validity windows.
+CRP v1 signature entries remain limited to `key_id`, `algorithm`, `value`, and
+`signed_at`. A verifiable signature must include the timestamp, which is covered
+by CheeseWAF's domain-separated signature envelope; source-root, trust-level,
+release-sequence, and digest evidence belong in the signed manifest or external
+Store release record, not as extra signature-object fields.
 
 The minimal, parseable and cryptographically verifiable layout example is maintained in
 [`CheeseSec_Plugin_Docs/examples/crp-v1/`](https://github.com/LaokeQwQ/CheeseSec_Plugin_Docs/tree/main/examples/crp-v1).
@@ -117,13 +122,14 @@ operations; this repository never stores private keys or generated .crp files.
   Typesafe 调用，也不能直接改变 WAF 决策。
 - EDR v1 只关联 WAF、认证、挑战、限速和 Origin 事件，不读取主机进程、文件或原始
   请求；它只能产生证据和风险 hint。
-- DuckDB 是 `host-provided` 的只读分析 sidecar/CLI，只读取异步生成的脱敏 Parquet，
-  不进入请求热路径、不写 PG/native-raft/Redis、不提供监听服务，CRP 不携带 DuckDB
-  二进制。
+- DuckDB 是宿主提供的一次性只读分析作业，只读取 CheeseWAF 导出的脱敏 Parquet，
+  只输出 `analysis-record/v1`，不进入请求热路径、不写 PG/native-raft/Redis、不提供监听
+  服务，CRP 不携带 DuckDB 二进制或动态库。
 
 四个 descriptor 示例位于 `examples/extensions/`，共同约束为异步、observe-first、
-控制面激活、无 direct action；真实运行时接线、Typesafe API 客户端、EDR 留观状态机和
-DuckDB 安装/热加载仍需在 CheeseWAF 阶段看板中单独验收。字段语义和数据流见
+控制面激活、无 direct action；DuckDB 以独立 one-shot job 运行，不是常驻 sidecar。
+真实运行时接线、Typesafe API 客户端、EDR 留观状态机和 DuckDB 作业监督仍需在 CheeseWAF
+阶段看板中单独验收。字段语义和数据流见
 [`docs/extension-contracts.md`](docs/extension-contracts.md)。
 
 消息边界也已固定为 `risk-hint/v1`、`waf-security-event/v1`、
@@ -132,10 +138,10 @@ fixture 只用于契约校验，不代表线上消息总线或签名密钥已经
 
 ## DuckDB 分析扩展边界（规划）
 
-DuckDB 仅作为可选分析/审计 sidecar 或 CLI 扩展规划，不随 CheeseWAF 默认发行物附带，
+DuckDB 仅作为可选分析/审计 one-shot job 规划，不随 CheeseWAF 默认发行物附带，
 不进入请求热路径、PG、native-raft 或 Redis，也不提供常驻网络服务。`audit-parquet/v1`
 清单绑定签名、摘要、大小、行数、列集和时间窗；快照文件只通过不含宿主路径的引用交付。
-插件只携带签名审查过的查询模板，不接受任意 SQL；宿主使用独立 OS 沙箱、只读快照挂载、
+作业只接受固定且签名审查过的参数化查询模板，不接受任意 SQL；宿主使用独立 OS 沙箱、只读快照挂载、
 无网络、无扩展自动加载及硬资源上限执行。DuckDB 官方安全模型也将 SQL 视为代码，要求用
 操作系统边界隔离不可信查询。兼容和交付门禁以
 CheeseSec_Plugin_Docs/docs/duckdb-extension.md 为准；本契约仍是规划，尚未接线或强制执行。

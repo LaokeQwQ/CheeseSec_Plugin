@@ -4,7 +4,7 @@
     {
       "key_id": "official-demo-1",
       "algorithm": "ed25519",
-      "public_key": "PUjCFCKYB9YV2tgkiQDd2pNBlUpNgRQMO583Ko9mzOA=",
+      "public_key": "th7cSWOsG/kJx3TdjZW23jMykYQVQKLN15oot0pUPCo=",
       "trust_level": "official",
       "source_root": "vendor-root-v1",
       "status": "active",
@@ -14,7 +14,7 @@
     {
       "key_id": "official-demo-2",
       "algorithm": "ed25519",
-      "public_key": "tmQm994lexosH4k6EH7gLBXxYlumFzYiRnEwsmw6q78=",
+      "public_key": "+arqABuj+GSH96sMyWcgAnyZHDLhHu1ss43k7b1kGEA=",
       "trust_level": "official",
       "source_root": "vendor-root-v1",
       "status": "active",

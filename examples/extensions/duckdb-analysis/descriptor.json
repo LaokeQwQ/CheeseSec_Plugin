@@ -4,12 +4,12 @@
   "plugin_id": "duckdb-analysis",
   "class": "analytics",
   "deployment": "host-provided",
-  "runtime": "sidecar",
+  "runtime": "one-shot-job",
   "version": "1.0.0",
   "namespace": "official/duckdb",
   "source": "future-contract",
   "source_root": "vendor-root-v1",
-  "capabilities": ["observe", "analysis_record", "candidate_snapshot", "health"],
+  "capabilities": ["observe", "analysis_record", "health"],
   "input": {
     "schema": "cheesewaf/audit-parquet/v1",
     "data_class": "redacted-audit-snapshot",
@@ -18,7 +18,7 @@
     "host_telemetry": false
   },
   "output": {
-    "schemas": ["cheesewaf/analysis-record/v1", "cheesewaf/candidate-snapshot/v1"],
+    "schemas": ["cheesewaf/analysis-record/v1"],
     "direct_actions": [],
     "max_bytes": 1048576,
     "ttl_seconds": 3600
@@ -36,6 +36,7 @@
   "deployment_config": {
     "provider": "duckdb",
     "version_range": ">=1.3.0 <2.0.0",
+    "execution_mode": "one-shot-analysis-job",
     "artifact_policy": "host-provided",
     "persistent_database": false,
     "query_policy_ref": "duckdb-read-only-snapshot-v1"

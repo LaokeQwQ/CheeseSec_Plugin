@@ -9,7 +9,7 @@
   "namespace": "official/jev-lite",
   "source": "future-contract",
   "source_root": "vendor-root-v1",
-  "capabilities": ["observe", "evidence", "risk_hint", "health"],
+  "capabilities": ["observe", "risk_hint", "health"],
   "input": {
     "schema": "cheesewaf/security-snapshot/v1",
     "data_class": "redacted-security-event",
@@ -18,7 +18,7 @@
     "host_telemetry": false
   },
   "output": {
-    "schemas": ["cheesewaf/risk-hint/v1", "cheesewaf/evidence-ref/v1"],
+    "schemas": ["cheesewaf/risk-hint/v1"],
     "direct_actions": [],
     "max_bytes": 16384,
     "ttl_seconds": 300

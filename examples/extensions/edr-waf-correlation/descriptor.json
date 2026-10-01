@@ -9,7 +9,7 @@
   "namespace": "official/edr",
   "source": "future-contract",
   "source_root": "vendor-root-v1",
-  "capabilities": ["observe", "evidence", "risk_hint", "health"],
+  "capabilities": ["observe", "risk_hint", "health"],
   "input": {
     "schema": "cheesewaf/waf-security-event/v1",
     "data_class": "waf-security-event",
@@ -18,7 +18,7 @@
     "host_telemetry": false
   },
   "output": {
-    "schemas": ["cheesewaf/edr-evidence/v1", "cheesewaf/risk-hint/v1"],
+    "schemas": ["cheesewaf/risk-hint/v1"],
     "direct_actions": [],
     "max_bytes": 32768,
     "ttl_seconds": 900

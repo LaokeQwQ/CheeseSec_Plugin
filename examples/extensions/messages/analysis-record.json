@@ -4,6 +4,12 @@
   "plugin_id": "duckdb-analysis",
   "plugin_version": "1.0.0",
   "snapshot_ref": "snapshot:site-demo:20261001:0001",
+  "snapshot_manifest_sha256": "ec61eee57adc2705eb7ac4c8d33f39ba5851947af458d718b3b30445ddb1bdb0",
+  "query_template_ref": "duckdb-template:security-summary-v1",
+  "query_template_sha256": "85fb7e484d08c6ca624853331ec703edb1a4083833525775989b67103d49ffad",
+  "engine_version": "1.3.0",
+  "execution_profile_ref": "duckdb-read-only-snapshot-v1",
+  "execution_profile_sha256": "bda215287d581cb08b04a350e7490c5517d087747f75277662e4f5830762e09a",
   "generated_at": "2026-10-01T09:10:00Z",
   "window": { "from": "2026-10-01T08:00:00Z", "to": "2026-10-01T09:00:00Z" },
   "findings": [

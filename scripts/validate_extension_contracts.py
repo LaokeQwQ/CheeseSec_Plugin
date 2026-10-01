@@ -2,6 +2,7 @@
 """Validate the planned Jev, EDR and DuckDB extension descriptors."""
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
@@ -30,8 +31,76 @@ MESSAGE_FIXTURE_FILES = {
 }
 DUCKDB_ROW_SCHEMA_PATH = MESSAGE_SCHEMA_ROOT / "audit-event-row.schema.json"
 DUCKDB_ROW_FIXTURE_PATH = MESSAGE_FIXTURE_ROOT / "audit-event-row.json"
+EXPECTED_PLUGIN_IDENTITIES = {
+    "jev": {
+        "hosted_identity": {
+            "descriptor_id": "official-jev-typesafe-online-1.0.0",
+            "plugin_id": "jev-typesafe-advisor",
+            "namespace": "official/jev",
+            "class": "risk-advisor",
+            "deployment": "hosted-api",
+            "provider": "typesafe",
+            "endpoint_ref": "typesafe-api",
+            "tls_pin_ref": "typesafe-api-current",
+            "failure_behavior": "no-hint",
+            "fallback": "none",
+        },
+        "lite_identity": {
+            "descriptor_id": "official-jev-lite-local-1.0.0",
+            "plugin_id": "jev-lite-local",
+            "namespace": "official/jev-lite",
+            "class": "risk-advisor",
+            "deployment": "local-lite",
+            "provider": "typesafe-jev-lite",
+            "model_ref": "jev-lite-model-v1",
+        },
+        "hosted_target": "typesafe-api",
+        "required_input_schema": "cheesewaf/security-snapshot/v1",
+        "required_output_schema": "cheesewaf/risk-hint/v1",
+    },
+    "edr": {
+        "identity": {
+            "descriptor_id": "official-edr-waf-correlation-1.0.0",
+            "plugin_id": "edr-waf-correlation",
+            "namespace": "official/edr",
+            "class": "event-correlator",
+            "deployment": "local-sidecar",
+            "provider": "cheesewaf",
+        },
+        "required_input_schema": "cheesewaf/waf-security-event/v1",
+        "required_data_class": "waf-security-event",
+        "host_telemetry": False,
+    },
+    "duckdb": {
+        "identity": {
+            "descriptor_id": "official-duckdb-analysis-1.0.0",
+            "plugin_id": "duckdb-analysis",
+            "namespace": "official/duckdb",
+            "class": "analytics",
+            "deployment": "host-provided",
+            "runtime": "one-shot-job",
+            "provider": "duckdb",
+        },
+        "required_input_schema": "cheesewaf/audit-parquet/v1",
+        "required_data_class": "redacted-audit-snapshot",
+        "provider": "duckdb",
+    },
+}
+EXPECTED_DUCKDB_TEMPLATE = {
+    "query_template_ref": "duckdb-template:security-summary-v1",
+    "query_template_file": "examples/extensions/duckdb-analysis/security-summary.sql",
+    "query_template_sha256": "85fb7e484d08c6ca624853331ec703edb1a4083833525775989b67103d49ffad",
+}
+EXPECTED_CANONICAL_LIMITS = {"max_online_lease_seconds": 60}
+EXPECTED_JEV_ONLINE_LEASE = {
+    "required": True,
+    "max_ttl_seconds": 60,
+    "max_requests": 4,
+    "max_bytes": 131072,
+}
 DUCKDB_EXECUTION_PROFILE = {
     "profile_id": "duckdb-read-only-snapshot-v1",
+    "execution_model": "one-shot-analysis-job",
     "runtime_isolation": "os-sandbox",
     "query_artifact": "reviewed-signed-template",
     "allow_arbitrary_sql": False,
@@ -141,7 +210,70 @@ def _assert(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+def validate_plugin_identities(policy: dict[str, Any]) -> None:
+    for extension, expected_fields in EXPECTED_PLUGIN_IDENTITIES.items():
+        section = policy.get(extension)
+        _assert(isinstance(section, dict), f"{extension} policy is missing")
+        for field, expected in expected_fields.items():
+            _assert(section.get(field) == expected, f"{extension} canonical policy changed: {field}")
+    for field, expected in EXPECTED_CANONICAL_LIMITS.items():
+        _assert(policy.get(field) == expected, f"canonical policy limit changed: {field}")
+
+
+def _canonical_json_sha256(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def validate_edr_context_binding(
+    event: dict[str, Any],
+    authenticated_peer: dict[str, Any],
+    last_sequence: int,
+) -> None:
+    """Compare event claims with peer claims supplied by the transport verifier."""
+    _assert(event["tenant_ref"] == authenticated_peer.get("tenant_ref"), "EDR tenant does not match authenticated peer")
+    _assert(event["source_instance_ref"] == authenticated_peer.get("source_instance_ref"), "EDR source instance does not match authenticated peer")
+    _assert(event["stream_ref"] == authenticated_peer.get("stream_ref"), "EDR stream does not match authenticated peer")
+    _assert(event["site_ref"] in authenticated_peer.get("site_refs", []), "EDR site is outside authenticated peer scope")
+    _assert(type(event["sequence"]) is int and event["sequence"] > last_sequence, "EDR sequence is not strictly increasing")
+
+
+def validate_duckdb_provenance(
+    policy: dict[str, Any],
+    snapshot: dict[str, Any],
+    analysis_record: dict[str, Any],
+) -> None:
+    duckdb = policy["duckdb"]
+    for field, value in EXPECTED_DUCKDB_TEMPLATE.items():
+        _assert(duckdb.get(field) == value, f"DuckDB canonical template policy changed: {field}")
+    expected_template = {
+        "query_template_ref": EXPECTED_DUCKDB_TEMPLATE["query_template_ref"],
+        "query_template_file": EXPECTED_DUCKDB_TEMPLATE["query_template_file"],
+    }
+    for field, value in expected_template.items():
+        _assert(duckdb.get(field) == value, f"DuckDB query template binding changed: {field}")
+
+    template_bytes = (ROOT / expected_template["query_template_file"]).read_bytes()
+    template_digest = hashlib.sha256(template_bytes).hexdigest()
+    _assert(duckdb.get("query_template_sha256") == template_digest, "DuckDB query template digest does not match the reviewed artifact")
+    _assert(analysis_record["query_template_ref"] == duckdb["query_template_ref"], "analysis record query template reference changed")
+    _assert(analysis_record["query_template_sha256"] == template_digest, "analysis record query template digest changed")
+
+    _assert(
+        duckdb.get("provenance_digest_format") == "sha256-json-sort-keys-compact-utf8-v1",
+        "DuckDB provenance digest format changed",
+    )
+    _assert(analysis_record["snapshot_manifest_sha256"] == _canonical_json_sha256(snapshot), "analysis record does not bind the input manifest")
+    _assert(analysis_record["execution_profile_ref"] == DUCKDB_EXECUTION_PROFILE["profile_id"], "analysis record execution profile reference changed")
+    _assert(
+        analysis_record["execution_profile_sha256"] == _canonical_json_sha256(DUCKDB_EXECUTION_PROFILE),
+        "analysis record execution profile digest changed",
+    )
+    _assert(analysis_record["snapshot_ref"] == snapshot["snapshot_id"], "analysis record does not bind the input snapshot")
+
+
 def validate_descriptor(descriptor: dict[str, Any], schema: dict[str, Any], policy: dict[str, Any]) -> None:
+    validate_plugin_identities(policy)
     path = descriptor.get("_path")
     label = str(path.relative_to(ROOT)) if isinstance(path, Path) else descriptor.get("descriptor_id", "descriptor")
     instance = {key: value for key, value in descriptor.items() if key != "_path"}
@@ -158,49 +290,71 @@ def validate_descriptor(descriptor: dict[str, Any], schema: dict[str, Any], poli
     _assert(deployment in class_policy["deployments"], f"{label}: deployment is not allowed for {extension_class}")
     _assert(descriptor["network"]["mode"] not in class_policy["forbidden_network_modes"], f"{label}: network mode is forbidden for {extension_class}")
     _assert(set(instance["capabilities"]) & set(class_policy["allowed_outputs"]), f"{label}: descriptor has no allowed output capability")
+    allowed_capabilities = set(class_policy["allowed_outputs"]) | {"observe", "health"}
+    _assert(set(instance["capabilities"]) <= allowed_capabilities, f"{label}: descriptor claims an unsupported capability")
 
     network = instance["network"]
     lease = network["lease"]
     if deployment == "hosted-api":
+        identity = policy["jev"]["hosted_identity"]
         _assert(extension_class == "risk-advisor", f"{label}: hosted API is reserved for risk advisors")
-        _assert(descriptor["deployment_config"]["provider"] == policy["jev"]["hosted_provider"], f"{label}: hosted provider is not Typesafe")
+        for field in ("descriptor_id", "plugin_id", "namespace", "class", "deployment"):
+            _assert(instance[field] == identity[field], f"{label}: hosted Jev {field} identity changed")
+        _assert(instance["runtime"] == "sidecar", f"{label}: hosted Jev must use the sidecar runtime")
+        _assert(descriptor["deployment_config"]["provider"] == identity["provider"], f"{label}: hosted provider is not Typesafe")
         _assert(network["mode"] == "brokered", f"{label}: hosted Jev must use brokered egress")
         _assert(network["allowed_targets"] == [policy["jev"]["hosted_target"]], f"{label}: hosted target is not fixed")
-        _assert(lease["required"] is True and 0 < lease["max_ttl_seconds"] <= policy["max_online_lease_seconds"], f"{label}: hosted Jev lease is not bounded")
-        _assert(lease["max_requests"] > 0 and lease["max_bytes"] > 0, f"{label}: hosted Jev lease must have positive request and byte limits")
-        _assert(set(instance["deployment_config"]) == {"provider", "endpoint_ref", "tls_pin_ref"}, f"{label}: hosted Jev config has unexpected fields")
-        _assert(instance["deployment_config"].get("endpoint_ref") == policy["jev"]["hosted_target"], f"{label}: endpoint reference is not fixed")
-        _assert(instance["deployment_config"].get("tls_pin_ref"), f"{label}: hosted Jev must declare a TLS pin reference")
+        _assert(lease == EXPECTED_JEV_ONLINE_LEASE, f"{label}: hosted Jev lease limits changed")
+        _assert(set(instance["deployment_config"]) == {"provider", "endpoint_ref", "tls_pin_ref", "failure_behavior", "fallback"}, f"{label}: hosted Jev config has unexpected fields")
+        _assert(instance["deployment_config"].get("endpoint_ref") == identity["endpoint_ref"] == policy["jev"]["hosted_target"], f"{label}: endpoint reference is not fixed")
+        _assert(instance["deployment_config"].get("tls_pin_ref") == identity["tls_pin_ref"], f"{label}: hosted Jev TLS pin reference changed")
+        _assert(instance["deployment_config"].get("failure_behavior") == identity["failure_behavior"] == "no-hint", f"{label}: hosted Jev failure must produce no hint")
+        _assert(instance["deployment_config"].get("fallback") == identity["fallback"] == "none", f"{label}: hosted Jev must not fall back to a local model")
         _assert(instance["input"]["schema"] == policy["jev"]["required_input_schema"], f"{label}: hosted Jev input schema changed")
-        _assert(policy["jev"]["required_output_schema"] in instance["output"]["schemas"], f"{label}: hosted Jev must emit the risk-hint schema")
+        _assert(instance["output"]["schemas"] == [policy["jev"]["required_output_schema"]], f"{label}: hosted Jev output schema changed")
     elif deployment == "local-lite":
+        identity = policy["jev"]["lite_identity"]
         _assert(extension_class == "risk-advisor", f"{label}: local-lite is reserved for Jev Lite")
+        for field in ("descriptor_id", "plugin_id", "namespace", "class", "deployment"):
+            _assert(instance[field] == identity[field], f"{label}: Jev Lite {field} identity changed")
+        _assert(instance["runtime"] == "sidecar", f"{label}: Jev Lite must use the sidecar runtime")
         _assert(set(instance["deployment_config"]) == {"provider", "model_ref"}, f"{label}: local-lite config has unexpected fields")
-        _assert(instance["deployment_config"]["provider"] == policy["jev"]["lite_provider"], f"{label}: local-lite provider is not Jev Lite")
-        _assert(instance["deployment_config"].get("model_ref"), f"{label}: local-lite must bind a model reference")
+        _assert(instance["deployment_config"]["provider"] == identity["provider"], f"{label}: local-lite provider is not Jev Lite")
+        _assert(instance["deployment_config"].get("model_ref") == identity["model_ref"], f"{label}: local-lite model reference changed")
         _assert(network["mode"] == "deny" and network["allowed_targets"] == [], f"{label}: local-lite must deny egress")
         _assert(lease == {"required": False, "max_ttl_seconds": 0, "max_requests": 0, "max_bytes": 0}, f"{label}: local-lite must not request a lease")
         _assert(instance["input"]["schema"] == policy["jev"]["required_input_schema"], f"{label}: local-lite input schema changed")
-        _assert(policy["jev"]["required_output_schema"] in instance["output"]["schemas"], f"{label}: local-lite must emit the risk-hint schema")
+        _assert(instance["output"]["schemas"] == [policy["jev"]["required_output_schema"]], f"{label}: local-lite output schema changed")
     elif deployment == "local-sidecar":
+        identity = policy["edr"]["identity"]
         _assert(extension_class == "event-correlator", f"{label}: local-sidecar is reserved for event correlators")
+        for field in ("descriptor_id", "plugin_id", "namespace", "class", "deployment"):
+            _assert(instance[field] == identity[field], f"{label}: EDR {field} identity changed")
+        _assert(instance["runtime"] == "sidecar", f"{label}: EDR must use the sidecar runtime")
         _assert(set(instance["deployment_config"]) == {"provider"}, f"{label}: event correlator config has unexpected fields")
-        _assert(instance["deployment_config"]["provider"] == "cheesewaf", f"{label}: event correlator provider must be CheeseWAF")
+        _assert(instance["deployment_config"]["provider"] == identity["provider"], f"{label}: event correlator provider must be CheeseWAF")
         _assert(network["mode"] == "deny" and network["allowed_targets"] == [], f"{label}: event correlator must deny egress")
         _assert(lease == {"required": False, "max_ttl_seconds": 0, "max_requests": 0, "max_bytes": 0}, f"{label}: event correlator must not request a lease")
         _assert(instance["input"]["schema"] == policy["edr"]["required_input_schema"], f"{label}: EDR input schema changed")
         _assert(instance["input"]["data_class"] == policy["edr"]["required_data_class"], f"{label}: EDR data class changed")
         _assert(instance["input"]["host_telemetry"] is policy["edr"]["host_telemetry"], f"{label}: host telemetry must remain disabled")
+        _assert(instance["output"]["schemas"] == [policy["jev"]["required_output_schema"]], f"{label}: EDR output must be a risk hint only")
     elif deployment == "host-provided":
+        identity = policy["duckdb"]["identity"]
         _assert(extension_class == "analytics", f"{label}: host-provided is reserved for analytics")
+        for field in ("descriptor_id", "plugin_id", "namespace", "class", "deployment", "runtime"):
+            _assert(instance[field] == identity[field], f"{label}: DuckDB {field} identity changed")
+        _assert(instance["runtime"] == "one-shot-job", f"{label}: DuckDB must use the one-shot job runtime")
         config = instance["deployment_config"]
-        _assert(set(config) == {"provider", "version_range", "artifact_policy", "persistent_database", "query_policy_ref"}, f"{label}: DuckDB config has unexpected fields")
-        _assert(config["provider"] == policy["duckdb"]["provider"], f"{label}: analytics provider must be DuckDB")
+        _assert(set(config) == {"provider", "version_range", "execution_mode", "artifact_policy", "persistent_database", "query_policy_ref"}, f"{label}: DuckDB config has unexpected fields")
+        _assert(config["provider"] == identity["provider"] == policy["duckdb"]["provider"], f"{label}: analytics provider must be DuckDB")
+        _assert(config["execution_mode"] == policy["duckdb"]["execution_mode"] == DUCKDB_EXECUTION_PROFILE["execution_model"], f"{label}: DuckDB must be a one-shot analysis job")
         _assert(config["artifact_policy"] == policy["duckdb"]["artifact_policy"], f"{label}: DuckDB binary must be host-provided")
         _assert(config["persistent_database"] is False, f"{label}: DuckDB must not persist a writable database")
         _assert(config["query_policy_ref"] == policy["duckdb"]["query_policy_ref"], f"{label}: DuckDB query policy is not bound")
         _assert(network["mode"] == "deny" and network["allowed_targets"] == [], f"{label}: analytics must deny egress")
         _assert(lease == {"required": False, "max_ttl_seconds": 0, "max_requests": 0, "max_bytes": 0}, f"{label}: analytics must not request a lease")
+        _assert(instance["output"]["schemas"] == ["cheesewaf/analysis-record/v1"], f"{label}: DuckDB output must be analysis-record only")
         _assert(instance["input"]["schema"] == policy["duckdb"]["required_input_schema"], f"{label}: DuckDB input schema changed")
         _assert(instance["input"]["data_class"] == policy["duckdb"]["required_data_class"], f"{label}: DuckDB data class changed")
         _assert(policy.get("duckdb_execution") == DUCKDB_EXECUTION_PROFILE, f"{label}: DuckDB execution isolation or limits changed")
@@ -232,6 +386,7 @@ def validate_messages(
     schemas: dict[str, dict[str, Any]] | None = None,
     fixtures: dict[str, dict[str, Any]] | None = None,
 ) -> None:
+    validate_plugin_identities(policy)
     if schemas is None or fixtures is None:
         loaded_schemas, loaded_fixtures = load_message_contracts(policy)
         schemas = loaded_schemas if schemas is None else schemas
@@ -251,6 +406,21 @@ def validate_messages(
             },
             f"message policy binding changed: {name}",
         )
+
+    expected_edr_binding = {
+        "authenticated_transport": "mutual-tls",
+        "tenant_binding": "authenticated-peer-claim",
+        "source_instance_binding": "authenticated-peer-claim",
+        "site_binding": "authenticated-peer-claim",
+        "sequence_scope": "source-instance-and-stream",
+        "sequence_rule": "strictly-increasing",
+        "duplicate_rule": "deduplicate-by-event-id-and-sequence",
+        "gap_rule": "audit-and-reconcile",
+    }
+    edr_policy = policy.get("edr")
+    _assert(isinstance(edr_policy, dict), "EDR policy is missing")
+    for field, value in expected_edr_binding.items():
+        _assert(edr_policy.get(field) == value, f"EDR authenticated event policy changed: {field}")
 
     for name, schema in schemas.items():
         binding = bindings[name]
@@ -331,7 +501,7 @@ def validate_messages(
     _assert(row_fixture["site_ref"] in snapshot["site_refs"], "audit row site is outside the snapshot scope")
     row_time = _parse_datetime(row_fixture["occurred_at"], "audit_event_row.occurred_at")
     _assert(snapshot_start <= row_time < snapshot_end, "audit row timestamp is outside the snapshot window")
-    _assert(analysis_record["snapshot_ref"] == snapshot["snapshot_id"], "analysis record does not bind the input snapshot")
+    validate_duckdb_provenance(policy, snapshot, analysis_record)
     _assert(
         sum(item["compressed_bytes"] for item in snapshot["files"]) <= duckdb["input"]["max_bytes"],
         "audit snapshot exceeds the DuckDB descriptor input byte limit",
