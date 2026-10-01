@@ -1,0 +1,23 @@
+{
+  "api_version": "store.cheesesec.com/v1",
+  "mode": "offline",
+  "network_requests": 0,
+  "required_inputs": [
+    "package.crp",
+    "trust-roots.json",
+    "source-registry.json",
+    "revocation-snapshot.json"
+  ],
+  "verification_order": [
+    "exact-crp-layout",
+    "manifest-schema",
+    "artifact-size-and-md5-sha1-sha256",
+    "source-root-binding",
+    "signature-threshold-and-validity",
+    "revocation-and-release-sequence",
+    "administrator-confirmation-when-required"
+  ],
+  "on_failure": "reject-without-install-or-activation",
+  "state_change": "stage-only-after-all-gates",
+  "audit": "append-only-local-record"
+}

@@ -1,0 +1,25 @@
+{
+  "api_version": "cheesewaf/audit-parquet/v1",
+  "snapshot_id": "snapshot:site-demo:20261001:0001",
+  "producer": "cheesewaf-audit-exporter",
+  "tenant_ref": "tenant:demo",
+  "site_refs": ["site:demo"],
+  "row_schema": "cheesewaf/audit-event-row/v1",
+  "columns": ["occurred_at", "event_type", "tenant_ref", "site_ref", "route_ref", "subject_hash", "severity", "evidence_refs", "count"],
+  "time_zone": "UTC",
+  "compression": "zstd",
+  "created_at": "2026-10-01T09:02:00Z",
+  "window": { "from": "2026-10-01T08:00:00Z", "to": "2026-10-01T09:00:00Z" },
+  "files": [
+    {
+      "file_ref": "snapshot-file:site-demo:20261001:part-0001",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "compressed_bytes": 4096,
+      "row_count": 4,
+      "window": { "from": "2026-10-01T08:00:00Z", "to": "2026-10-01T09:00:00Z" }
+    }
+  ],
+  "total_row_count": 4,
+  "redaction_profile": "audit-minimized/v1",
+  "integrity": { "algorithm": "ed25519", "key_id": "cheesewaf-audit-snapshot-v1", "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==" }
+}

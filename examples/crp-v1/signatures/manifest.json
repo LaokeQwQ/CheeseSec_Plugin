@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "key_id": "official-demo-1",
+    "algorithm": "ed25519",
+    "value": "EXt0qqteVuEuhP/KuGFPaBt60qkn+9lK1sNNqOKgalIQejverS1Huy+6XyPXiRPdpV94N3NaLn2NAjfTFKP+Ag==",
+    "signed_at": "2026-01-15T00:00:00Z"
+  },
+  {
+    "key_id": "official-demo-2",
+    "algorithm": "ed25519",
+    "value": "j1iYIKdoJnTDLi7B0xu+3n2b9TgKF68m3gY85dkkJ/fh/6tE0fXkTIn6lBcum5jPbDSSJra0PrY+DkRsKhj6Cw==",
+    "signed_at": "2026-01-15T00:00:00Z"
+  }
+]

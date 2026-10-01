@@ -1,0 +1,42 @@
+{
+  "api_version": "crp.cheesewaf.io/extensions/v1",
+  "descriptor_id": "official-jev-lite-local-1.0.0",
+  "plugin_id": "jev-lite-local",
+  "class": "risk-advisor",
+  "deployment": "local-lite",
+  "runtime": "sidecar",
+  "version": "1.0.0",
+  "namespace": "official/jev-lite",
+  "source": "future-contract",
+  "source_root": "vendor-root-v1",
+  "capabilities": ["observe", "risk_hint", "health"],
+  "input": {
+    "schema": "cheesewaf/security-snapshot/v1",
+    "data_class": "redacted-security-event",
+    "redaction_profile": "metadata-only",
+    "max_bytes": 32768,
+    "host_telemetry": false
+  },
+  "output": {
+    "schemas": ["cheesewaf/risk-hint/v1"],
+    "direct_actions": [],
+    "max_bytes": 16384,
+    "ttl_seconds": 300
+  },
+  "network": {
+    "mode": "deny",
+    "allowed_targets": [],
+    "lease": { "required": false, "max_ttl_seconds": 0, "max_requests": 0, "max_bytes": 0 }
+  },
+  "activation": {
+    "request_path": "asynchronous",
+    "initial_mode": "observe",
+    "activation_owner": "control-plane"
+  },
+  "deployment_config": {
+    "provider": "typesafe-jev-lite",
+    "model_ref": "jev-lite-model-v1"
+  },
+  "resources": { "cpu_milli": 500, "memory_bytes": 536870912, "pids": 64 },
+  "publication": { "status": "planned", "installable": false, "crp_binding": "descriptor-only" }
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/extensions/v1/audit-parquet.schema.json",
+  "title": "CheeseWAF audit Parquet snapshot manifest v1",
+  "description": "Signed manifest for immutable, minimized audit Parquet files; file paths remain host-owned opaque references.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "snapshot_id", "producer", "tenant_ref", "site_refs", "row_schema", "columns", "time_zone", "compression", "created_at", "window", "files", "total_row_count", "redaction_profile", "integrity"],
+  "properties": {
+    "api_version": { "const": "cheesewaf/audit-parquet/v1" },
+    "snapshot_id": { "$ref": "#/$defs/id" },
+    "producer": { "const": "cheesewaf-audit-exporter" },
+    "tenant_ref": { "$ref": "#/$defs/id" },
+    "site_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1024,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "row_schema": { "const": "cheesewaf/audit-event-row/v1" },
+    "columns": {
+      "const": ["occurred_at", "event_type", "tenant_ref", "site_ref", "route_ref", "subject_hash", "severity", "evidence_refs", "count"]
+    },
+    "time_zone": { "const": "UTC" },
+    "compression": { "const": "zstd" },
+    "created_at": { "type": "string", "format": "date-time", "pattern": "Z$" },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "type": "string", "format": "date-time", "pattern": "Z$" },
+        "to": { "type": "string", "format": "date-time", "pattern": "Z$" }
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file_ref", "sha256", "compressed_bytes", "row_count", "window"],
+        "properties": {
+          "file_ref": { "type": "string", "pattern": "^snapshot-file:[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+          "sha256": { "$ref": "#/$defs/sha256" },
+          "compressed_bytes": { "type": "integer", "minimum": 1, "maximum": 104857600 },
+          "row_count": { "type": "integer", "minimum": 1, "maximum": 10000000 },
+          "window": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to"],
+            "properties": {
+              "from": { "type": "string", "format": "date-time", "pattern": "Z$" },
+              "to": { "type": "string", "format": "date-time", "pattern": "Z$" }
+            }
+          }
+        }
+      }
+    },
+    "total_row_count": { "type": "integer", "minimum": 1, "maximum": 10000000 },
+    "redaction_profile": { "const": "audit-minimized/v1" },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "key_id", "value"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "key_id": { "$ref": "#/$defs/id" },
+        "value": { "type": "string", "minLength": 88, "maxLength": 88, "pattern": "^[A-Za-z0-9+/]{86}==$" }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

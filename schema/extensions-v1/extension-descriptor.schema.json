@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/extensions/v1/extension-descriptor.schema.json",
+  "title": "CheeseWAF advisory and analytics extension descriptor (planned)",
+  "description": "A descriptor-only extension contract. It is intentionally outside the CRP v1 archive parser.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "api_version",
+    "descriptor_id",
+    "plugin_id",
+    "class",
+    "deployment",
+    "runtime",
+    "version",
+    "namespace",
+    "source",
+    "source_root",
+    "capabilities",
+    "input",
+    "output",
+    "network",
+    "activation",
+    "deployment_config",
+    "resources",
+    "publication"
+  ],
+  "properties": {
+    "api_version": { "const": "crp.cheesewaf.io/extensions/v1" },
+    "descriptor_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+    "plugin_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$" },
+    "class": { "enum": ["risk-advisor", "event-correlator", "analytics"] },
+    "deployment": { "enum": ["hosted-api", "local-lite", "local-sidecar", "host-provided"] },
+    "runtime": { "enum": ["sidecar", "one-shot-job"] },
+    "version": { "$ref": "#/$defs/version" },
+    "namespace": { "$ref": "#/$defs/namespace" },
+    "source": { "$ref": "#/$defs/identifier" },
+    "source_root": { "$ref": "#/$defs/identifier" },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["observe", "risk_hint", "analysis_record", "health"] }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "data_class", "redaction_profile", "max_bytes", "host_telemetry"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/identifier" },
+        "data_class": { "enum": ["redacted-security-event", "waf-security-event", "redacted-audit-snapshot"] },
+        "redaction_profile": { "enum": ["metadata-only", "parquet-minimized"] },
+        "max_bytes": { "type": "integer", "minimum": 1, "maximum": 104857600 },
+        "host_telemetry": { "const": false }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemas", "direct_actions", "max_bytes", "ttl_seconds"],
+      "properties": {
+        "schemas": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "direct_actions": {
+          "type": "array",
+          "maxItems": 0,
+          "items": { "type": "string" }
+        },
+        "max_bytes": { "type": "integer", "minimum": 1, "maximum": 10485760 },
+        "ttl_seconds": { "type": "integer", "minimum": 1, "maximum": 86400 }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "allowed_targets", "lease"],
+      "properties": {
+        "mode": { "enum": ["deny", "brokered"] },
+        "allowed_targets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "lease": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "max_ttl_seconds", "max_requests", "max_bytes"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "max_ttl_seconds": { "type": "integer", "minimum": 0, "maximum": 600 },
+            "max_requests": { "type": "integer", "minimum": 0, "maximum": 32 },
+            "max_bytes": { "type": "integer", "minimum": 0, "maximum": 10485760 }
+          }
+        }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request_path", "initial_mode", "activation_owner"],
+      "properties": {
+        "request_path": { "const": "asynchronous" },
+        "initial_mode": { "const": "observe" },
+        "activation_owner": { "const": "control-plane" }
+      }
+    },
+    "deployment_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider"],
+      "properties": {
+        "provider": { "enum": ["typesafe", "typesafe-jev-lite", "cheesewaf", "duckdb"] },
+        "endpoint_ref": { "$ref": "#/$defs/identifier" },
+        "tls_pin_ref": { "$ref": "#/$defs/identifier" },
+        "failure_behavior": { "const": "no-hint" },
+        "fallback": { "const": "none" },
+        "model_ref": { "$ref": "#/$defs/identifier" },
+        "execution_mode": { "const": "one-shot-analysis-job" },
+        "version_range": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "artifact_policy": { "const": "host-provided" },
+        "persistent_database": { "const": false },
+        "query_policy_ref": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu_milli", "memory_bytes", "pids"],
+      "properties": {
+        "cpu_milli": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "memory_bytes": { "type": "integer", "minimum": 0, "maximum": 1099511627776 },
+        "pids": { "type": "integer", "minimum": 0, "maximum": 32768 }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "installable", "crp_binding"],
+      "properties": {
+        "status": { "const": "planned" },
+        "installable": { "const": false },
+        "crp_binding": { "const": "descriptor-only" }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$"
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^(official/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|enterprise/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|(community|personal|test|development)/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63})$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+([.][0-9]+){0,2}([-][0-9A-Za-z.-]+)?([+][0-9A-Za-z.-]+)?$"
+    }
+  }
+}
