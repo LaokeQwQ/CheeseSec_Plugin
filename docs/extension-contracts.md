@@ -11,6 +11,8 @@
 - 输入只能是固定 schema 的脱敏数据；不允许原始请求体、Cookie、Authorization、
   Token、密钥或管理员会话。
 - 扩展失败、超时、额度耗尽或版本过期时只能保持 last-known-good，并记录审计。
+- 消息 schema 固定在 `risk-hint/v1`、`waf-security-event/v1` 和
+  `analysis-record/v1`；示例 fixture 仅用于门禁，不能当作线上传输或签名密钥。
 
 ## Jev
 
@@ -21,6 +23,9 @@
 `local-lite` 是明确的小版本变体：provider 为 `typesafe-jev-lite`，绑定本地模型引用，
 默认 `network.mode=deny`，不请求 Socket Lease。两种部署共用 `risk-hint/v1` 输出，
 hint 必须携带策略代次、TTL 和证据引用，过期或跨代 hint 由核心拒绝。
+
+`risk-hint/v1` 的签名算法固定为 Ed25519；hint 只提供建议处置，不能直接触发 ACL、
+挑战或封禁。
 
 ## EDR
 

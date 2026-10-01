@@ -1,0 +1,20 @@
+{
+  "api_version": "cheesewaf/waf-security-event/v1",
+  "event_id": "event:waf:20261001:0001",
+  "event_type": "challenge_failed",
+  "observed_at": "2026-10-01T09:00:00Z",
+  "site_ref": "site:demo",
+  "route_ref": "route:login",
+  "subject_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "severity": "medium",
+  "count": 4,
+  "window_seconds": 60,
+  "evidence_refs": ["evidence:waf:20261001:0001"],
+  "metadata": {
+    "rule_family": "bot",
+    "method_class": "write",
+    "status_class": "4xx",
+    "challenge_result": "failed",
+    "auth_factor": "not-applicable"
+  }
+}

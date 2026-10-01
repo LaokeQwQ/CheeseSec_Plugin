@@ -1,0 +1,20 @@
+{
+  "api_version": "cheesewaf/analysis-record/v1",
+  "record_id": "analysis:duckdb:20261001:0001",
+  "plugin_id": "duckdb-analysis",
+  "plugin_version": "1.0.0",
+  "snapshot_ref": "snapshot:parquet:20261001T090000Z",
+  "generated_at": "2026-10-01T09:10:00Z",
+  "window": { "from": "2026-10-01T08:00:00Z", "to": "2026-10-01T09:00:00Z" },
+  "findings": [
+    {
+      "code": "finding:challenge-burst",
+      "severity": "medium",
+      "count": 4,
+      "subject_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "evidence_refs": ["evidence:waf:20261001:0001"]
+    }
+  ],
+  "recommendations": ["review"],
+  "integrity": { "algorithm": "ed25519", "key_id": "official-duckdb-output-v1", "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==" }
+}

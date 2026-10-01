@@ -63,6 +63,31 @@ class ExtensionContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.validate_descriptor(mutated, schema, policy)
 
+    def test_message_contracts_bind_to_descriptors(self) -> None:
+        module = contract_module()
+        schema, policy, descriptors = module.load_contracts()
+        schemas, fixtures = module.load_message_contracts()
+        module.validate_messages(policy, descriptors, schemas, fixtures)
+
+    def test_message_contracts_reject_invalid_time_windows_and_raw_fields(self) -> None:
+        module = contract_module()
+        _, policy, descriptors = module.load_contracts()
+        schemas, fixtures = module.load_message_contracts()
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["risk_hint"]["expires_at"] = mutated["risk_hint"]["observed_at"]
+        with self.assertRaises(ValueError):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["analysis_record"]["window"]["from"] = mutated["analysis_record"]["window"]["to"]
+        with self.assertRaises(ValueError):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures["waf_security_event"])
+        mutated["metadata"]["raw_request_body"] = "forbidden"
+        with self.assertRaises(ValueError):
+            module.schema_validate(mutated, schemas["waf_security_event"], "mutated WAF event")
 
 if __name__ == "__main__":
     unittest.main()

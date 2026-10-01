@@ -38,6 +38,23 @@
     "provider": "duckdb",
     "artifact_policy": "host-provided"
   },
+  "messages": {
+    "risk_hint": {
+      "schema": "cheesewaf/risk-hint/v1",
+      "file": "schema/extensions-v1/risk-hint.schema.json",
+      "fixture": "examples/extensions/messages/risk-hint.json"
+    },
+    "waf_security_event": {
+      "schema": "cheesewaf/waf-security-event/v1",
+      "file": "schema/extensions-v1/waf-security-event.schema.json",
+      "fixture": "examples/extensions/messages/waf-security-event.json"
+    },
+    "analysis_record": {
+      "schema": "cheesewaf/analysis-record/v1",
+      "file": "schema/extensions-v1/analysis-record.schema.json",
+      "fixture": "examples/extensions/messages/analysis-record.json"
+    }
+  },
   "forbidden_input_fields": [
     "raw_request_body",
     "cookie",

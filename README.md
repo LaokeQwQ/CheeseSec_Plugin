@@ -126,6 +126,10 @@ operations; this repository never stores private keys or generated .crp files.
 DuckDB 安装/热加载仍需在 CheeseWAF 阶段看板中单独验收。字段语义和数据流见
 [`docs/extension-contracts.md`](docs/extension-contracts.md)。
 
+消息边界也已固定为 `risk-hint/v1`、`waf-security-event/v1` 和
+`analysis-record/v1`，并分别提供 schema 与脱敏 fixture；fixture 只用于契约校验，
+不代表线上消息总线或签名密钥已经接入。
+
 ## DuckDB 分析扩展边界（规划）
 
 DuckDB 仅作为可选的分析/审计 sidecar 或 CLI 扩展规划，不随 CheeseWAF 默认发行物附带，

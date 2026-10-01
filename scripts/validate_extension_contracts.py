@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,18 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "extensions-v1" / "extension-descriptor.schema.json"
 POLICY_PATH = ROOT / "policy" / "extension-contracts.json"
 EXAMPLE_ROOT = ROOT / "examples" / "extensions"
+MESSAGE_SCHEMA_ROOT = ROOT / "schema" / "extensions-v1"
+MESSAGE_SCHEMA_FILES = {
+    "risk_hint": MESSAGE_SCHEMA_ROOT / "risk-hint.schema.json",
+    "waf_security_event": MESSAGE_SCHEMA_ROOT / "waf-security-event.schema.json",
+    "analysis_record": MESSAGE_SCHEMA_ROOT / "analysis-record.schema.json",
+}
+MESSAGE_FIXTURE_ROOT = ROOT / "examples" / "extensions" / "messages"
+MESSAGE_FIXTURE_FILES = {
+    "risk_hint": MESSAGE_FIXTURE_ROOT / "risk-hint.json",
+    "waf_security_event": MESSAGE_FIXTURE_ROOT / "waf-security-event.json",
+    "analysis_record": MESSAGE_FIXTURE_ROOT / "analysis-record.json",
+}
 
 
 def strict_load(path: Path) -> Any:
@@ -48,6 +61,12 @@ def load_contracts() -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any
         descriptor["_path"] = path
         descriptors.append(descriptor)
     return schema, policy, descriptors
+
+
+def load_message_contracts() -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    schemas = {name: strict_load(path) for name, path in MESSAGE_SCHEMA_FILES.items()}
+    fixtures = {name: strict_load(path) for name, path in MESSAGE_FIXTURE_FILES.items()}
+    return schemas, fixtures
 
 
 def _assert(condition: bool, message: str) -> None:
@@ -120,6 +139,68 @@ def validate_descriptor(descriptor: dict[str, Any], schema: dict[str, Any], poli
         raise ValueError(f"{label}: unsupported deployment")
 
 
+def _parse_datetime(value: str, label: str) -> datetime:
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"{label}: invalid date-time {value!r}") from exc
+
+
+def validate_messages(
+    policy: dict[str, Any],
+    descriptors: list[dict[str, Any]],
+    schemas: dict[str, dict[str, Any]] | None = None,
+    fixtures: dict[str, dict[str, Any]] | None = None,
+) -> None:
+    if schemas is None or fixtures is None:
+        loaded_schemas, loaded_fixtures = load_message_contracts()
+        schemas = loaded_schemas if schemas is None else schemas
+        fixtures = loaded_fixtures if fixtures is None else fixtures
+    bindings = policy.get("messages")
+    _assert(isinstance(bindings, dict), "extension policy must bind message schemas")
+    _assert(set(bindings) == set(MESSAGE_SCHEMA_FILES), "message schema bindings are incomplete")
+
+    for name, schema in schemas.items():
+        binding = bindings[name]
+        try:
+            Draft202012Validator.check_schema(schema)
+        except Exception as exc:
+            raise ValueError(f"message schema {name} is invalid: {exc}") from exc
+        _assert(schema["properties"]["api_version"]["const"] == binding["schema"], f"message binding changed: {name}")
+        fixture = fixtures[name]
+        schema_validate(fixture, schema, f"message fixture {name}")
+        _assert(fixture["api_version"] == binding["schema"], f"message fixture api_version changed: {name}")
+
+    risk_hint = fixtures["risk_hint"]
+    _assert(
+        _parse_datetime(risk_hint["observed_at"], "risk_hint.observed_at")
+        < _parse_datetime(risk_hint["expires_at"], "risk_hint.expires_at"),
+        "risk_hint expires_at must be after observed_at",
+    )
+    analysis_record = fixtures["analysis_record"]
+    _assert(
+        _parse_datetime(analysis_record["window"]["from"], "analysis_record.window.from")
+        < _parse_datetime(analysis_record["window"]["to"], "analysis_record.window.to"),
+        "analysis_record window.to must be after window.from",
+    )
+
+    by_plugin = {descriptor["plugin_id"]: descriptor for descriptor in descriptors}
+    _assert(risk_hint["plugin_id"] in by_plugin, "risk hint plugin is not declared")
+    _assert(
+        bindings["risk_hint"]["schema"] in by_plugin[risk_hint["plugin_id"]]["output"]["schemas"],
+        "risk hint plugin does not declare risk-hint output",
+    )
+    edr = by_plugin.get("edr-waf-correlation")
+    _assert(edr is not None, "EDR descriptor is not declared")
+    _assert(edr["input"]["schema"] == bindings["waf_security_event"]["schema"], "EDR input is not the WAF event schema")
+    duckdb = by_plugin.get("duckdb-analysis")
+    _assert(duckdb is not None, "DuckDB descriptor is not declared")
+    _assert(
+        bindings["analysis_record"]["schema"] in duckdb["output"]["schemas"],
+        "DuckDB plugin does not declare analysis-record output",
+    )
+
+
 def validate_contracts() -> list[str]:
     schema, policy, descriptors = load_contracts()
     schema_validate(policy, {"type": "object"}, "extension policy")
@@ -133,6 +214,8 @@ def validate_contracts() -> list[str]:
         _assert(descriptor_id not in ids, f"duplicate descriptor_id: {descriptor_id}")
         ids.add(descriptor_id)
         validate_descriptor(descriptor, schema, policy)
+    message_schemas, message_fixtures = load_message_contracts()
+    validate_messages(policy, descriptors, message_schemas, message_fixtures)
     return sorted(ids)
 
 
