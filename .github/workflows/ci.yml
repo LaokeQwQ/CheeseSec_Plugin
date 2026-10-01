@@ -49,6 +49,9 @@ jobs:
       - name: Validate store, OTA, sidecar and CWEDP contracts
         run: python scripts/validate_commercial_contracts.py --base-ref origin/main
 
+      - name: Validate planned Jev, EDR and DuckDB extension contracts
+        run: python scripts/validate_extension_contracts.py
+
       - name: Validate offline verifier entry point
         run: python scripts/verify_offline_import.py --help
 

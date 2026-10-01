@@ -1,0 +1,51 @@
+{
+  "api_version": "crp.cheesewaf.io/extensions/v1",
+  "status": "planned",
+  "crp_v1_unchanged": true,
+  "direct_actions": [],
+  "classes": {
+    "risk-advisor": {
+      "deployments": ["hosted-api", "local-lite"],
+      "allowed_outputs": ["evidence", "risk_hint"],
+      "forbidden_network_modes": []
+    },
+    "event-correlator": {
+      "deployments": ["local-sidecar"],
+      "allowed_outputs": ["evidence", "risk_hint"],
+      "forbidden_network_modes": ["brokered"]
+    },
+    "analytics": {
+      "deployments": ["host-provided"],
+      "allowed_outputs": ["analysis_record", "candidate_snapshot"],
+      "forbidden_network_modes": ["brokered"]
+    }
+  },
+  "jev": {
+    "hosted_provider": "typesafe",
+    "lite_provider": "typesafe-jev-lite",
+    "hosted_target": "typesafe-api",
+    "required_input_schema": "cheesewaf/security-snapshot/v1",
+    "required_output_schema": "cheesewaf/risk-hint/v1"
+  },
+  "edr": {
+    "required_input_schema": "cheesewaf/waf-security-event/v1",
+    "required_data_class": "waf-security-event",
+    "host_telemetry": false
+  },
+  "duckdb": {
+    "required_input_schema": "cheesewaf/audit-parquet/v1",
+    "required_data_class": "redacted-audit-snapshot",
+    "provider": "duckdb",
+    "artifact_policy": "host-provided"
+  },
+  "forbidden_input_fields": [
+    "raw_request_body",
+    "cookie",
+    "authorization",
+    "token",
+    "secret",
+    "private_key",
+    "administrator_session"
+  ],
+  "max_online_lease_seconds": 60
+}

@@ -104,6 +104,28 @@ examples/store-v1/ is contract-only and contains no installable or published
 package. Actual offline verification and activation remain CheeseWAF runtime
 operations; this repository never stores private keys or generated .crp files.
 
+## Jev、EDR 与 DuckDB 扩展契约（规划）
+
+`schema/extensions-v1/extension-descriptor.schema.json` 定义了不修改 CRP v1
+解析器的扩展描述契约。它目前只允许 descriptor-only 规划示例，不代表可安装、
+可发布或已接入 CheeseWAF 运行时。
+
+- 完整版 Jev 是 `hosted-api` 风险顾问，只能通过控制面 broker 使用一次性短租约调用
+  Typesafe API；输入必须是固定 schema 的脱敏安全快照，输出只能是带 TTL、策略代次
+  和证据引用的 `risk_hint`。
+- Jev Lite 是明确的 `local-lite` 变体，默认拒绝外部出站。它不能替代完整版的在线
+  Typesafe 调用，也不能直接改变 WAF 决策。
+- EDR v1 只关联 WAF、认证、挑战、限速和 Origin 事件，不读取主机进程、文件或原始
+  请求；它只能产生证据和风险 hint。
+- DuckDB 是 `host-provided` 的只读分析 sidecar/CLI，只读取异步生成的脱敏 Parquet，
+  不进入请求热路径、不写 PG/native-raft/Redis、不提供监听服务，CRP 不携带 DuckDB
+  二进制。
+
+四个 descriptor 示例位于 `examples/extensions/`，共同约束为异步、observe-first、
+控制面激活、无 direct action；真实运行时接线、Typesafe API 客户端、EDR 留观状态机和
+DuckDB 安装/热加载仍需在 CheeseWAF 阶段看板中单独验收。字段语义和数据流见
+[`docs/extension-contracts.md`](docs/extension-contracts.md)。
+
 ## DuckDB 分析扩展边界（规划）
 
 DuckDB 仅作为可选的分析/审计 sidecar 或 CLI 扩展规划，不随 CheeseWAF 默认发行物附带，
