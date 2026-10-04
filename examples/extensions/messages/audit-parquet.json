@@ -21,5 +21,14 @@
   ],
   "total_row_count": 4,
   "redaction_profile": "audit-minimized/v1",
-  "integrity": { "algorithm": "ed25519", "key_id": "cheesewaf-audit-snapshot-v1", "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==" }
+  "integrity": {
+    "algorithm": "ed25519",
+    "issuer": "cheesewaf-host",
+    "purpose": "extension-output-attestation",
+    "domain": "cheesewaf-extension-output-attestation-v1",
+    "key_id": "cheesewaf-host-output-v1",
+    "signed_at": "2026-10-01T09:02:01Z",
+    "payload_sha256": "655d1ae92def15941bf6195e58e3f88602970f496c702c2e133537bc31eb9cbb",
+    "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+  }
 }

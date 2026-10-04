@@ -64,10 +64,15 @@
     "integrity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["algorithm", "key_id", "value"],
+      "required": ["algorithm", "issuer", "purpose", "domain", "key_id", "signed_at", "payload_sha256", "value"],
       "properties": {
         "algorithm": { "const": "ed25519" },
+        "issuer": { "const": "cheesewaf-host" },
+        "purpose": { "const": "extension-output-attestation" },
+        "domain": { "const": "cheesewaf-extension-output-attestation-v1" },
         "key_id": { "$ref": "#/$defs/id" },
+        "signed_at": { "type": "string", "format": "date-time", "pattern": "Z$" },
+        "payload_sha256": { "$ref": "#/$defs/sha256" },
         "value": { "type": "string", "minLength": 88, "maxLength": 88, "pattern": "^[A-Za-z0-9+/]{86}==$" }
       }
     }

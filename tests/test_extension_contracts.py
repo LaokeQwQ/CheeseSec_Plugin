@@ -198,6 +198,26 @@ class ExtensionContractTests(unittest.TestCase):
         schemas, fixtures = module.load_message_contracts()
         module.validate_messages(policy, descriptors, schemas, fixtures)
 
+    def test_host_attestation_binds_to_host_and_unsigned_payload(self) -> None:
+        module = contract_module()
+        _, policy, descriptors = module.load_contracts()
+        schemas, fixtures = module.load_message_contracts(policy)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["risk_hint"]["risk"]["score"] = 83
+        with self.assertRaisesRegex(ValueError, "payload digest does not match"):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["analysis_record"]["integrity"]["issuer"] = "jev-typesafe-advisor"
+        with self.assertRaisesRegex(ValueError, "integrity.issuer"):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
+        mutated = copy.deepcopy(fixtures)
+        mutated["risk_hint"]["integrity"]["signed_at"] = "2026-10-01T08:59:59Z"
+        with self.assertRaisesRegex(ValueError, "predates validated payload"):
+            module.validate_messages(policy, descriptors, schemas, mutated)
+
     def test_edr_transport_policy_cannot_drop_authenticated_bindings(self) -> None:
         module = contract_module()
         _, policy, descriptors = module.load_contracts()

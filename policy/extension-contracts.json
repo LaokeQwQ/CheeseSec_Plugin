@@ -3,6 +3,17 @@
   "status": "planned",
   "crp_v1_unchanged": true,
   "direct_actions": [],
+  "host_attestation": {
+    "issuer": "cheesewaf-host",
+    "purpose": "extension-output-attestation",
+    "domain": "cheesewaf-extension-output-attestation-v1",
+    "signature_input": "domain-newline-payload-sha256-newline-key-id-newline-signed-at-v1",
+    "key_owner": "cheesewaf-control-plane",
+    "key_storage": "host-keystore",
+    "signing_stage": "after-core-validation",
+    "failure_behavior": "discard-and-audit",
+    "messages": ["risk_hint", "analysis_record", "audit_parquet"]
+  },
   "classes": {
     "risk-advisor": {
       "deployments": ["hosted-api", "local-lite"],

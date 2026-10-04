@@ -92,6 +92,17 @@ EXPECTED_DUCKDB_TEMPLATE = {
     "query_template_sha256": "85fb7e484d08c6ca624853331ec703edb1a4083833525775989b67103d49ffad",
 }
 EXPECTED_CANONICAL_LIMITS = {"max_online_lease_seconds": 60}
+EXPECTED_HOST_ATTESTATION = {
+    "issuer": "cheesewaf-host",
+    "purpose": "extension-output-attestation",
+    "domain": "cheesewaf-extension-output-attestation-v1",
+    "signature_input": "domain-newline-payload-sha256-newline-key-id-newline-signed-at-v1",
+    "key_owner": "cheesewaf-control-plane",
+    "key_storage": "host-keystore",
+    "signing_stage": "after-core-validation",
+    "failure_behavior": "discard-and-audit",
+    "messages": ["risk_hint", "analysis_record", "audit_parquet"],
+}
 EXPECTED_JEV_ONLINE_LEASE = {
     "required": True,
     "max_ttl_seconds": 60,
@@ -218,6 +229,7 @@ def validate_plugin_identities(policy: dict[str, Any]) -> None:
             _assert(section.get(field) == expected, f"{extension} canonical policy changed: {field}")
     for field, expected in EXPECTED_CANONICAL_LIMITS.items():
         _assert(policy.get(field) == expected, f"canonical policy limit changed: {field}")
+    _assert(policy.get("host_attestation") == EXPECTED_HOST_ATTESTATION, "host attestation policy changed")
 
 
 def _canonical_json_sha256(value: Any) -> str:
@@ -236,6 +248,26 @@ def validate_edr_context_binding(
     _assert(event["stream_ref"] == authenticated_peer.get("stream_ref"), "EDR stream does not match authenticated peer")
     _assert(event["site_ref"] in authenticated_peer.get("site_refs", []), "EDR site is outside authenticated peer scope")
     _assert(type(event["sequence"]) is int and event["sequence"] > last_sequence, "EDR sequence is not strictly increasing")
+
+
+def validate_host_attestation(policy: dict[str, Any], message_name: str, message: dict[str, Any], payload_time_field: str) -> None:
+    """Validate the host-owned envelope binding; cryptographic verification is runtime work."""
+    contract = policy.get("host_attestation")
+    _assert(isinstance(contract, dict), "host attestation policy is missing")
+    _assert(message_name in contract["messages"], f"host attestation is not allowed for {message_name}")
+    integrity = message.get("integrity")
+    _assert(isinstance(integrity, dict), f"{message_name} integrity is missing")
+    for field in ("issuer", "purpose", "domain"):
+        _assert(integrity.get(field) == contract[field], f"{message_name} host attestation {field} is not bound")
+    unsigned = dict(message)
+    unsigned.pop("integrity", None)
+    _assert(
+        integrity.get("payload_sha256") == _canonical_json_sha256(unsigned),
+        f"{message_name} host attestation payload digest does not match",
+    )
+    signed_at = _parse_datetime(integrity.get("signed_at", ""), f"{message_name}.integrity.signed_at")
+    payload_time = _parse_datetime(message[payload_time_field], f"{message_name}.{payload_time_field}")
+    _assert(signed_at >= payload_time, f"{message_name} host attestation predates validated payload")
 
 
 def validate_duckdb_provenance(
@@ -508,6 +540,9 @@ def validate_messages(
     row_time = _parse_datetime(row_fixture["occurred_at"], "audit_event_row.occurred_at")
     _assert(snapshot_start <= row_time < snapshot_end, "audit row timestamp is outside the snapshot window")
     validate_duckdb_provenance(policy, snapshot, analysis_record)
+    validate_host_attestation(policy, "risk_hint", risk_hint, "observed_at")
+    validate_host_attestation(policy, "analysis_record", analysis_record, "generated_at")
+    validate_host_attestation(policy, "audit_parquet", snapshot, "created_at")
     _assert(
         sum(item["compressed_bytes"] for item in snapshot["files"]) <= duckdb["input"]["max_bytes"],
         "audit snapshot exceeds the DuckDB descriptor input byte limit",

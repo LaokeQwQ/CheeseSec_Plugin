@@ -12,6 +12,10 @@
 - 输入只能是固定 schema 的脱敏数据；不允许原始请求体、Cookie、Authorization、
   Token、密钥或管理员会话。
 - 扩展失败、超时、额度耗尽或版本过期时只能保持 last-known-good，并记录审计。
+- 输出由 CheeseWAF 宿主在核心校验完成后统一签章；插件不持有宿主私钥。`integrity` 使用
+  `cheesewaf-extension-output-attestation-v1` 域分离，签名输入按
+  `domain + "\\n" + payload_sha256 + "\\n" + key_id + "\\n" + signed_at` 组成。
+  验收失败时丢弃输出并记录审计。
 - 消息 schema 固定在 `risk-hint/v1`、`waf-security-event/v1`、
   `analysis-record/v1` 和 `audit-parquet/v1`；示例 fixture 仅用于门禁，不能当作
   线上传输或签名密钥。
@@ -29,10 +33,11 @@
 只有显式启用 Jev Lite 才会执行本地版本；它不是完整版的离线回退。两种部署共用
 `risk-hint/v1` 输出，hint 必须携带策略代次、TTL 和证据引用，过期或跨代 hint 由核心拒绝。
 
-`risk-hint/v1` 的签名算法固定为 Ed25519；hint 只提供建议处置，不能直接触发 ACL、
-挑战或封禁。示例中的签名值是格式占位，不是有效签名。运行时必须对规范化消息体
-执行密码学验签，并把 `key_id` 绑定到控制面信任存储和有效期/撤销状态；schema 门禁
-只验证字段格式，不构成验签。
+`risk-hint/v1` 的宿主签章算法固定为 Ed25519；hint 只提供建议处置，不能直接触发 ACL、
+挑战或封禁。示例中的签名值是格式占位，不是有效签名。运行时必须先完成插件身份、
+schema、租户/站点范围、策略代次和 TTL 校验，再由控制面使用宿主密钥签章；消费方必须
+验签并把 `key_id` 绑定到控制面信任存储和有效期/撤销状态。schema 门禁只验证字段和
+规范化 payload 摘要，不构成密码学验签。
 
 ## EDR
 
@@ -89,4 +94,5 @@ DuckDB 是嵌入式引擎，没有进程内权限边界；SQL 能访问文件、
 当前文件、策略和示例都是 `planned`、`descriptor-only`，未接入真实 Typesafe 客户端、
 EDR 留观运行时、DuckDB 安装器或热加载。上线前仍需在 CheeseWAF 阶段看板补齐统一耐久审计、
 租约/撤销、离线导入、兼容矩阵、回滚和生产接线证据。DuckDB 清单验签、文件内容验证、
-SQL 模板审查、OS 沙箱及预算强制也尚未实现；schema 门禁不能证明运行时隔离已经生效。
+SQL 模板审查、OS 沙箱及预算强制也尚未实现；宿主签章的真实私钥托管、验签、轮换和吊销
+同样仍需由 CheeseWAF 运行时实现，schema 门禁不能证明运行时隔离或密码学验签已经生效。
