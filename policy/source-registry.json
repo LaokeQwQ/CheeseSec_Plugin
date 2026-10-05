@@ -1,0 +1,10 @@
+{
+  "api_version": "store.cheesesec.com/v1",
+  "sources": [
+    {
+      "source": "offline",
+      "source_root": "vendor-root-v1",
+      "trust_level": "official"
+    }
+  ]
+}

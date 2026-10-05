@@ -1,0 +1,11 @@
+{
+  "occurred_at": "2026-10-01T08:45:00Z",
+  "event_type": "challenge_failed",
+  "tenant_ref": "tenant:demo",
+  "site_ref": "site:demo",
+  "route_ref": "route:login",
+  "subject_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "severity": "medium",
+  "evidence_refs": ["evidence:waf:20261001:0001"],
+  "count": 4
+}

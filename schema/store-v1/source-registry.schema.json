@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/store/v1/source-registry.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "sources"],
+  "properties": {
+    "api_version": { "const": "store.cheesesec.com/v1" },
+    "sources": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "source_root", "trust_level"],
+        "properties": {
+          "source": { "type": "string", "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$" },
+          "source_root": { "type": "string", "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$" },
+          "trust_level": { "enum": ["official", "enterprise", "community", "personal", "test", "development"] }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/extensions/v1/risk-hint.schema.json",
+  "title": "CheeseWAF risk hint v1",
+  "description": "Signed, asynchronous advisory output. It never grants a direct enforcement action.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "hint_id", "plugin_id", "plugin_version", "subject", "risk", "policy_epoch", "observed_at", "expires_at", "evidence_refs", "integrity"],
+  "properties": {
+    "api_version": { "const": "cheesewaf/risk-hint/v1" },
+    "hint_id": { "$ref": "#/$defs/id" },
+    "plugin_id": { "$ref": "#/$defs/id" },
+    "plugin_version": { "$ref": "#/$defs/version" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_type", "subject_hash"],
+      "properties": {
+        "subject_type": { "enum": ["ip", "fingerprint", "session", "tenant-resource"] },
+        "subject_hash": { "$ref": "#/$defs/sha256" },
+        "site_ref": { "$ref": "#/$defs/id" },
+        "route_ref": { "$ref": "#/$defs/id" }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "confidence", "band", "proposed_disposition"],
+      "properties": {
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "band": { "enum": ["low", "medium", "high", "critical"] },
+        "proposed_disposition": { "enum": ["observe", "contain", "isolate", "review"] }
+      }
+    },
+    "policy_epoch": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+    "observed_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^evidence:[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "issuer", "purpose", "domain", "key_id", "signed_at", "payload_sha256", "value"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "issuer": { "const": "cheesewaf-host" },
+        "purpose": { "const": "extension-output-attestation" },
+        "domain": { "const": "cheesewaf-extension-output-attestation-v1" },
+        "key_id": { "$ref": "#/$defs/id" },
+        "signed_at": { "type": "string", "format": "date-time", "pattern": "Z$" },
+        "payload_sha256": { "$ref": "#/$defs/sha256" },
+        "value": { "type": "string", "minLength": 88, "maxLength": 88, "pattern": "^[A-Za-z0-9+/]{86}==$" }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "version": { "type": "string", "pattern": "^[0-9]+([.][0-9]+){0,2}([-][0-9A-Za-z.-]+)?([+][0-9A-Za-z.-]+)?$" }
+  }
+}

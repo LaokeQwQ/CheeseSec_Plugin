@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ota.cheesesec.com/schema/store/v1/ota.schema.json",
+  "title": "CheeseSec pull-only OTA index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "index_sequence", "mode", "releases"],
+  "properties": {
+    "api_version": { "const": "ota.cheesesec.com/v1" },
+    "index_sequence": { "type": "integer", "minimum": 0 },
+    "mode": { "const": "pull-only" },
+    "releases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["release_id", "release_sequence", "version", "crp_sha256", "resource_url", "manifest_sha256", "signature_set_sha256", "source_root", "trust_level", "signature_status"],
+        "properties": {
+          "release_id": { "type": "string" },
+          "release_sequence": { "type": "integer", "minimum": 0 },
+          "version": { "type": "string" },
+          "crp_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "resource_url": { "type": "string", "pattern": "^https://res[.]cheesesec[.]com/sha256/[0-9a-f]{64}/[A-Za-z0-9._+-]+$" },
+          "manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "signature_set_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "source_root": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$" },
+          "trust_level": { "enum": ["official", "enterprise", "community", "personal", "test", "development"] },
+          "signature_status": { "const": "verified" }
+        }
+      },
+      "uniqueItems": true
+    }
+  }
+}

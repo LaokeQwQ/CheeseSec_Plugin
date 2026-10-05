@@ -1,0 +1,35 @@
+{
+  "api_version": "cheesewaf/analysis-record/v1",
+  "record_id": "analysis:duckdb:20261001:0001",
+  "plugin_id": "duckdb-analysis",
+  "plugin_version": "1.0.0",
+  "snapshot_ref": "snapshot:site-demo:20261001:0001",
+  "snapshot_manifest_sha256": "fa1ecd7b6347597f4071c1e6de262f22f1a7d32a75aeb4b3ffdaee6772bb7d74",
+  "query_template_ref": "duckdb-template:security-summary-v1",
+  "query_template_sha256": "85fb7e484d08c6ca624853331ec703edb1a4083833525775989b67103d49ffad",
+  "engine_version": "1.3.0",
+  "execution_profile_ref": "duckdb-read-only-snapshot-v1",
+  "execution_profile_sha256": "bda215287d581cb08b04a350e7490c5517d087747f75277662e4f5830762e09a",
+  "generated_at": "2026-10-01T09:10:00Z",
+  "window": { "from": "2026-10-01T08:00:00Z", "to": "2026-10-01T09:00:00Z" },
+  "findings": [
+    {
+      "code": "finding:challenge-burst",
+      "severity": "medium",
+      "count": 4,
+      "subject_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "evidence_refs": ["evidence:waf:20261001:0001"]
+    }
+  ],
+  "recommendations": ["review"],
+  "integrity": {
+    "algorithm": "ed25519",
+    "issuer": "cheesewaf-host",
+    "purpose": "extension-output-attestation",
+    "domain": "cheesewaf-extension-output-attestation-v1",
+    "key_id": "cheesewaf-host-output-v1",
+    "signed_at": "2026-10-01T09:10:01Z",
+    "payload_sha256": "efedec1719637732a43f896a6673513a57c0d1e471dcd781f98a72bc6adf91bb",
+    "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+  }
+}

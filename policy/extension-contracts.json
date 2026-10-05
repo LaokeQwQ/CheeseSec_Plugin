@@ -1,0 +1,174 @@
+{
+  "api_version": "crp.cheesewaf.io/extensions/v1",
+  "status": "planned",
+  "crp_v1_unchanged": true,
+  "direct_actions": [],
+  "host_attestation": {
+    "issuer": "cheesewaf-host",
+    "purpose": "extension-output-attestation",
+    "domain": "cheesewaf-extension-output-attestation-v1",
+    "signature_input": "domain-newline-payload-sha256-newline-key-id-newline-signed-at-v1",
+    "key_owner": "cheesewaf-control-plane",
+    "key_storage": "host-keystore",
+    "signing_stage": "after-core-validation",
+    "failure_behavior": "discard-and-audit",
+    "messages": ["risk_hint", "analysis_record", "audit_parquet"]
+  },
+  "classes": {
+    "risk-advisor": {
+      "deployments": ["hosted-api", "local-lite"],
+      "allowed_outputs": ["risk_hint"],
+      "forbidden_network_modes": []
+    },
+    "event-correlator": {
+      "deployments": ["local-sidecar"],
+      "allowed_outputs": ["risk_hint"],
+      "forbidden_network_modes": ["brokered"]
+    },
+    "analytics": {
+      "deployments": ["host-provided"],
+      "allowed_outputs": ["analysis_record"],
+      "forbidden_network_modes": ["brokered"]
+    }
+  },
+  "jev": {
+    "hosted_identity": {
+      "descriptor_id": "official-jev-typesafe-online-1.0.0",
+      "plugin_id": "jev-typesafe-advisor",
+      "namespace": "official/jev",
+      "class": "risk-advisor",
+      "deployment": "hosted-api",
+      "provider": "typesafe",
+      "endpoint_ref": "typesafe-api",
+      "tls_pin_ref": "typesafe-api-current",
+      "failure_behavior": "no-hint",
+      "fallback": "none"
+    },
+    "lite_identity": {
+      "descriptor_id": "official-jev-lite-local-1.0.0",
+      "plugin_id": "jev-lite-local",
+      "namespace": "official/jev-lite",
+      "class": "risk-advisor",
+      "deployment": "local-lite",
+      "provider": "typesafe-jev-lite",
+      "model_ref": "jev-lite-model-v1"
+    },
+    "hosted_target": "typesafe-api",
+    "required_input_schema": "cheesewaf/security-snapshot/v1",
+    "required_output_schema": "cheesewaf/risk-hint/v1"
+  },
+  "edr": {
+    "identity": {
+      "descriptor_id": "official-edr-waf-correlation-1.0.0",
+      "plugin_id": "edr-waf-correlation",
+      "namespace": "official/edr",
+      "class": "event-correlator",
+      "deployment": "local-sidecar",
+      "provider": "cheesewaf"
+    },
+    "required_input_schema": "cheesewaf/waf-security-event/v1",
+    "required_data_class": "waf-security-event",
+    "host_telemetry": false,
+    "authenticated_transport": "mutual-tls",
+    "tenant_binding": "authenticated-peer-claim",
+    "source_instance_binding": "authenticated-peer-claim",
+    "site_binding": "authenticated-peer-claim",
+    "sequence_scope": "source-instance-and-stream",
+    "sequence_rule": "strictly-increasing",
+    "duplicate_rule": "deduplicate-by-event-id-and-sequence",
+    "gap_rule": "audit-and-reconcile"
+  },
+  "duckdb": {
+    "identity": {
+      "descriptor_id": "official-duckdb-analysis-1.0.0",
+      "plugin_id": "duckdb-analysis",
+      "namespace": "official/duckdb",
+      "class": "analytics",
+      "deployment": "host-provided",
+      "runtime": "one-shot-job",
+      "provider": "duckdb"
+    },
+    "required_input_schema": "cheesewaf/audit-parquet/v1",
+    "required_data_class": "redacted-audit-snapshot",
+    "provider": "duckdb",
+    "artifact_policy": "host-provided",
+    "row_schema": "cheesewaf/audit-event-row/v1",
+    "row_schema_file": "schema/extensions-v1/audit-event-row.schema.json",
+    "row_fixture": "examples/extensions/messages/audit-event-row.json",
+    "query_policy_ref": "duckdb-read-only-snapshot-v1",
+    "execution_mode": "one-shot-analysis-job",
+    "query_template_ref": "duckdb-template:security-summary-v1",
+    "query_template_file": "examples/extensions/duckdb-analysis/security-summary.sql",
+    "query_template_sha256": "85fb7e484d08c6ca624853331ec703edb1a4083833525775989b67103d49ffad",
+    "provenance_digest_format": "sha256-json-sort-keys-compact-utf8-v1"
+  },
+  "messages": {
+    "risk_hint": {
+      "schema": "cheesewaf/risk-hint/v1",
+      "file": "schema/extensions-v1/risk-hint.schema.json",
+      "fixture": "examples/extensions/messages/risk-hint.json"
+    },
+    "waf_security_event": {
+      "schema": "cheesewaf/waf-security-event/v1",
+      "file": "schema/extensions-v1/waf-security-event.schema.json",
+      "fixture": "examples/extensions/messages/waf-security-event.json"
+    },
+    "analysis_record": {
+      "schema": "cheesewaf/analysis-record/v1",
+      "file": "schema/extensions-v1/analysis-record.schema.json",
+      "fixture": "examples/extensions/messages/analysis-record.json"
+    },
+    "audit_parquet": {
+      "schema": "cheesewaf/audit-parquet/v1",
+      "file": "schema/extensions-v1/audit-parquet.schema.json",
+      "fixture": "examples/extensions/messages/audit-parquet.json"
+    }
+  },
+  "duckdb_execution": {
+    "profile_id": "duckdb-read-only-snapshot-v1",
+    "execution_model": "one-shot-analysis-job",
+    "runtime_isolation": "os-sandbox",
+    "query_artifact": "reviewed-signed-template",
+    "allow_arbitrary_sql": false,
+    "allowed_relation": "audit_events",
+    "snapshot_access": "manifest-refs-allowlist",
+    "persistent_database": false,
+    "network_egress": "deny",
+    "filesystem": {
+      "snapshot_mount": "read-only",
+      "temporary_workspace": "isolated-bounded",
+      "other_host_paths": "deny"
+    },
+    "duckdb_settings": {
+      "enable_external_access": false,
+      "allowed_paths": "manifest-only",
+      "allow_community_extensions": false,
+      "autoload_known_extensions": false,
+      "autoinstall_known_extensions": false,
+      "lock_configuration": true
+    },
+    "limits": {
+      "wall_time_seconds": 30,
+      "cpu_milli": 1000,
+      "process_memory_bytes": 1073741824,
+      "duckdb_memory_bytes": 805306368,
+      "pids": 64,
+      "threads": 1,
+      "input_bytes": 104857600,
+      "temporary_bytes": 536870912,
+      "max_parallel_jobs": 1,
+      "max_output_rows": 10000,
+      "max_output_bytes": 1048576
+    }
+  },
+  "forbidden_input_fields": [
+    "raw_request_body",
+    "cookie",
+    "authorization",
+    "token",
+    "secret",
+    "private_key",
+    "administrator_session"
+  ],
+  "max_online_lease_seconds": 60
+}

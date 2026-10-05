@@ -1,0 +1,18 @@
+{
+  "api_version": "ota.cheesesec.com/v1",
+  "protocol": "cwedp/v1",
+  "pull_only": true,
+  "ansible_push": false,
+  "source_kinds": ["ota", "seed", "peer", "offline-crp"],
+  "negotiation": ["HELLO", "CAPABILITIES", "DistributionIntent"],
+  "integrity": {
+    "required_digests": ["md5", "sha1", "sha256"],
+    "content_addressed_chunks": true,
+    "signature_required": true,
+    "source_quarantine": true
+  },
+  "promotion": {
+    "install_upgrade_rollback_executor": "CWEDP",
+    "ansible_role": "bootstrap-agent-only"
+  }
+}

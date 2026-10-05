@@ -1,0 +1,45 @@
+{
+  "api_version": "crp.cheesewaf.io/extensions/v1",
+  "descriptor_id": "official-jev-typesafe-online-1.0.0",
+  "plugin_id": "jev-typesafe-advisor",
+  "class": "risk-advisor",
+  "deployment": "hosted-api",
+  "runtime": "sidecar",
+  "version": "1.0.0",
+  "namespace": "official/jev",
+  "source": "future-contract",
+  "source_root": "vendor-root-v1",
+  "capabilities": ["observe", "risk_hint", "health"],
+  "input": {
+    "schema": "cheesewaf/security-snapshot/v1",
+    "data_class": "redacted-security-event",
+    "redaction_profile": "metadata-only",
+    "max_bytes": 32768,
+    "host_telemetry": false
+  },
+  "output": {
+    "schemas": ["cheesewaf/risk-hint/v1"],
+    "direct_actions": [],
+    "max_bytes": 16384,
+    "ttl_seconds": 300
+  },
+  "network": {
+    "mode": "brokered",
+    "allowed_targets": ["typesafe-api"],
+    "lease": { "required": true, "max_ttl_seconds": 60, "max_requests": 4, "max_bytes": 131072 }
+  },
+  "activation": {
+    "request_path": "asynchronous",
+    "initial_mode": "observe",
+    "activation_owner": "control-plane"
+  },
+  "deployment_config": {
+    "provider": "typesafe",
+    "endpoint_ref": "typesafe-api",
+    "tls_pin_ref": "typesafe-api-current",
+    "failure_behavior": "no-hint",
+    "fallback": "none"
+  },
+  "resources": { "cpu_milli": 250, "memory_bytes": 268435456, "pids": 32 },
+  "publication": { "status": "planned", "installable": false, "crp_binding": "descriptor-only" }
+}

@@ -1,0 +1,27 @@
+{
+  "api_version": "cheesewaf/risk-hint/v1",
+  "hint_id": "hint:jev:20261001:0001",
+  "plugin_id": "jev-typesafe-advisor",
+  "plugin_version": "1.0.0",
+  "subject": {
+    "subject_type": "ip",
+    "subject_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "site_ref": "site:demo",
+    "route_ref": "route:login"
+  },
+  "risk": { "score": 82, "confidence": 78, "band": "high", "proposed_disposition": "contain" },
+  "policy_epoch": 17,
+  "observed_at": "2026-10-01T09:00:00Z",
+  "expires_at": "2026-10-01T09:05:00Z",
+  "evidence_refs": ["evidence:jev:20261001:0001"],
+  "integrity": {
+    "algorithm": "ed25519",
+    "issuer": "cheesewaf-host",
+    "purpose": "extension-output-attestation",
+    "domain": "cheesewaf-extension-output-attestation-v1",
+    "key_id": "cheesewaf-host-output-v1",
+    "signed_at": "2026-10-01T09:00:01Z",
+    "payload_sha256": "8c16685d382a6de9380accc148e3841309e422c1ace9d73db87b4f8fea541ca9",
+    "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+  }
+}

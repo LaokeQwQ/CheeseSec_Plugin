@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/store/v1/offline-import.schema.json",
+  "title": "CheeseSec offline CRP import policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "mode", "network_requests", "required_inputs", "verification_order", "on_failure", "state_change", "audit"],
+  "properties": {
+    "api_version": { "const": "store.cheesesec.com/v1" },
+    "mode": { "const": "offline" },
+    "network_requests": { "const": 0 },
+    "required_inputs": { "const": ["package.crp", "trust-roots.json", "source-registry.json", "revocation-snapshot.json"] },
+    "verification_order": { "const": ["exact-crp-layout", "manifest-schema", "artifact-size-and-md5-sha1-sha256", "source-root-binding", "signature-threshold-and-validity", "revocation-and-release-sequence", "administrator-confirmation-when-required"] },
+    "on_failure": { "const": "reject-without-install-or-activation" },
+    "state_change": { "const": "stage-only-after-all-gates" },
+    "audit": { "const": "append-only-local-record" }
+  }
+}
