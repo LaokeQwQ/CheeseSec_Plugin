@@ -10,12 +10,11 @@ updates:
       timezone: Asia/Shanghai
     labels:
       - dependencies
-      - ci
     open-pull-requests-limit: 5
     groups:
       github-codeql:
         patterns:
-          - github/codeql-action
+          - github/codeql-action/*
   - package-ecosystem: pip
     directory: /
     target-branch: dev
