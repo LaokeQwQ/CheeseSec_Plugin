@@ -2,9 +2,9 @@ name: repository-checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, canary, dev]
   pull_request:
-    branches: [main]
+    branches: [main, canary, dev]
 
 # Start from no implicit token permissions. The validation job only reads the
 # checked-out tree and does not need issue, package, or write privileges.
