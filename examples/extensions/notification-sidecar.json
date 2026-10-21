@@ -1,0 +1,35 @@
+{
+  "api_version": "cheesewaf/notification-sidecar/v1alpha1",
+  "id": "vendor.notify",
+  "version": "1.0.0",
+  "extension_class": "notification",
+  "capabilities": ["notify.send", "health"],
+  "provider_types": ["webhook"],
+  "egress": {
+    "mode": "brokered",
+    "allowlist_ref": "notification-endpoints",
+    "max_requests_per_minute": 60,
+    "max_request_bytes": 65536,
+    "timeout_seconds": 10
+  },
+  "limits": {
+    "max_concurrent": 4,
+    "max_queue": 256,
+    "max_retained_failures": 1024
+  },
+  "publication": {
+    "status": "planned",
+    "installable": false,
+    "crp_binding": "descriptor-only"
+  },
+  "integrity": {
+    "algorithm": "ed25519",
+    "issuer": "cheesewaf-host",
+    "purpose": "notification-sidecar-descriptor",
+    "domain": "cheesewaf-notification-sidecar-v1alpha1",
+    "key_id": "store-key-1",
+    "signed_at": "2026-10-22T00:00:00Z",
+    "payload_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+  }
+}

@@ -116,6 +116,12 @@ DuckDB 是嵌入式引擎，没有进程内权限边界；SQL 能访问文件、
   核心 `notifiers` 配置字段。
 - `examples/extensions/notifier-provider.json` 是 Feishu 的契约样例，只用于校验字段
   和边界，不是可安装包，也不代表飞书适配器已经实现。
+- v1alpha1 sidecar descriptor 契约位于
+  `schema/extensions-v1/notification-sidecar.schema.json`，样例为
+  `examples/extensions/notification-sidecar.json`。它只允许 `notification` 扩展类和
+  `notify.send`/`health` 能力，`egress.mode` 固定为 `brokered`，`installable` 固定为
+  `false`；端点 allowlist、秘密引用、重试、限流和审计仍由宿主持有。当前 v1 CRP
+  descriptor 不能声明该能力，也不能把 v1alpha1 descriptor 当作 CRP 归档安装。
 
 当前限制：没有运行时加载器，没有 CRP 绑定，也没有 catalog/OTA 条目。在核心补齐
 provider 适配、秘密存储和投递审计之前，不能把通知 provider 描述成可用能力。

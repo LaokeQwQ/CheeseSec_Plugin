@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/extensions/v1/notification-sidecar.schema.json",
+  "title": "CheeseWAF notification sidecar descriptor v1alpha1",
+  "description": "Contract-only descriptor for a host-brokered notification sidecar. It cannot self-enable, inline endpoints, or bypass the host egress policy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_version", "id", "version", "extension_class", "capabilities", "provider_types", "egress", "limits", "publication", "integrity"],
+  "properties": {
+    "api_version": { "const": "cheesewaf/notification-sidecar/v1alpha1" },
+    "id": { "$ref": "#/$defs/id" },
+    "version": { "$ref": "#/$defs/version" },
+    "extension_class": { "const": "notification" },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "enum": ["notify.send", "health"] }
+    },
+    "provider_types": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": { "enum": ["webhook", "dingtalk", "feishu", "wecom", "telegram", "email"] }
+    },
+    "egress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "allowlist_ref", "max_requests_per_minute", "max_request_bytes", "timeout_seconds"],
+      "properties": {
+        "mode": { "const": "brokered" },
+        "allowlist_ref": { "$ref": "#/$defs/id" },
+        "max_requests_per_minute": { "type": "integer", "minimum": 1, "maximum": 600 },
+        "max_request_bytes": { "type": "integer", "minimum": 256, "maximum": 262144 },
+        "timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 30 }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_concurrent", "max_queue", "max_retained_failures"],
+      "properties": {
+        "max_concurrent": { "type": "integer", "minimum": 1, "maximum": 32 },
+        "max_queue": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "max_retained_failures": { "type": "integer", "minimum": 1, "maximum": 4096 }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "installable", "crp_binding"],
+      "properties": {
+        "status": { "enum": ["planned", "published"] },
+        "installable": { "const": false },
+        "crp_binding": { "const": "descriptor-only" }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "issuer", "purpose", "domain", "key_id", "signed_at", "payload_sha256", "value"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "issuer": { "const": "cheesewaf-host" },
+        "purpose": { "const": "notification-sidecar-descriptor" },
+        "domain": { "const": "cheesewaf-notification-sidecar-v1alpha1" },
+        "key_id": { "$ref": "#/$defs/id" },
+        "signed_at": { "type": "string", "format": "date-time", "pattern": "Z$" },
+        "payload_sha256": { "$ref": "#/$defs/sha256" },
+        "value": { "type": "string", "minLength": 88, "maxLength": 88, "pattern": "^[A-Za-z0-9+/]{86}==$" }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "version": { "type": "string", "pattern": "^[0-9]+([.][0-9]+){0,2}([-][0-9A-Za-z.-]+)?([+][0-9A-Za-z.-]+)?$" }
+  }
+}
