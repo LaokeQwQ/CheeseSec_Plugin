@@ -1,4 +1,4 @@
-# Jev、EDR 与 DuckDB 扩展契约（规划）
+# Jev、EDR、DuckDB 与通知提供商扩展契约（规划）
 
 本页描述 `schema/extensions-v1/` 的规划性扩展契约。它位于 CRP v1 之外，
 不会改变当前 CheeseWAF 的三条目归档解析器，也不会把规划示例变成可安装包。
@@ -89,6 +89,37 @@ DuckDB 是嵌入式引擎，没有进程内权限边界；SQL 能访问文件、
 [安全模型](https://duckdb.org/security) 和
 [Securing DuckDB 指南](https://duckdb.org/docs/current/operations_manual/securing_duckdb/overview)。
 
+## 通知提供商包（规划）
+
+`crp.cheesewaf.io/notifier/v1` 是与扩展 descriptor 分开的纯契约。它只描述核心通知器
+如何把告警投递到某个目的地，不是可执行 sidecar，也不能被 CRP v1 安装。
+
+- 结构定义在 `schema/extensions-v1/notifier-provider.schema.json`：必填字段为
+  `provider_id`、`type`、`version`、`namespace`、`source`、`source_root`、
+  `config_schema`、`secret_fields`、`endpoint_templates`、`capabilities` 和
+  `publication`。所有对象都使用 `additionalProperties: false`，字符串、数组和模板大小
+  都有上限。
+- 允许的 `type` 固定为 `webhook`、`dingtalk`、`feishu`、`wecom`、`telegram` 和 `email`。
+- provider pack 没有可执行文件、容器镜像、WASM 或进程内模块，也没有自己的网络栈。
+  `endpoint_templates` 只能声明 `https://` 目标，`egress_owner` 固定为
+  `cheesewaf-core`；模板变量只能引用 `config_schema.fields` 或 `secret_fields`
+  中已声明的名字。
+- `secret_fields` 只是凭据的引用名（以 `_ref` 结尾），不是凭据值。Token、Webhook
+  明文、密钥、Cookie 和管理员会话都不允许进入 pack；实际值由 CheeseWAF 核心配置或
+  秘密存储提供。
+- sidecar descriptor 与它不是一个东西。当前 v1 sidecar 只允许 `observe`、
+  `candidate_snapshot`、`hint`、`health`，`egress` 固定为 `deny`，没有 `notify`
+  能力。因此通知发送只能由 core notifier 统一完成：出站目标、超时、重试、私网策略和
+  审计都由核心持有，插件拿不到出站通道。
+- 策略文件 `policy/notifier-providers.json` 固定 `status=planned`、
+  `installable=false`、`executable=false`、`runtime_capability_grant=false`，并登记
+  核心 `notifiers` 配置字段。
+- `examples/extensions/notifier-provider.json` 是 Feishu 的契约样例，只用于校验字段
+  和边界，不是可安装包，也不代表飞书适配器已经实现。
+
+当前限制：没有运行时加载器，没有 CRP 绑定，也没有 catalog/OTA 条目。在核心补齐
+provider 适配、秘密存储和投递审计之前，不能把通知 provider 描述成可用能力。
+
 ## 交付状态
 
 当前文件、策略和示例都是 `planned`、`descriptor-only`，未接入真实 Typesafe 客户端、
@@ -96,3 +127,6 @@ EDR 留观运行时、DuckDB 安装器或热加载。上线前仍需在 CheeseWA
 租约/撤销、离线导入、兼容矩阵、回滚和生产接线证据。DuckDB 清单验签、文件内容验证、
 SQL 模板审查、OS 沙箱及预算强制也尚未实现；宿主签章的真实私钥托管、验签、轮换和吊销
 同样仍需由 CheeseWAF 运行时实现，schema 门禁不能证明运行时隔离或密码学验签已经生效。
+通知 provider 包也仍停留在契约层：provider pack 的运行时加载、凭据引用解析、模板变量
+替换和投递审计都不由本仓库交付，示例不能作为安装或运行证据。具体投递适配是否可用，
+以 CheeseWAF 的阶段验收为准。

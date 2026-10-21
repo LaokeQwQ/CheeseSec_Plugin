@@ -1,0 +1,59 @@
+{
+  "api_version": "crp.cheesewaf.io/notifier/v1",
+  "status": "planned",
+  "contract_only": true,
+  "crp_v1_unchanged": true,
+  "crp_binding": "descriptor-only",
+  "installable": false,
+  "executable": false,
+  "runtime_capability_grant": false,
+  "provider_pack_schema": "schema/extensions-v1/notifier-provider.schema.json",
+  "provider_pack_example": "examples/extensions/notifier-provider.json",
+  "allowed_types": ["webhook", "dingtalk", "feishu", "wecom", "telegram", "email"],
+  "capabilities": {
+    "alert_delivery": "core-owned-delivery-only",
+    "test_delivery": "core-owned-delivery-only"
+  },
+  "egress": {
+    "owner": "cheesewaf-core",
+    "plugin_egress": "deny",
+    "sidecar_capabilities": ["observe", "candidate_snapshot", "hint", "health"],
+    "notification_capability": "unsupported-in-crp-v1",
+    "transport": "https-only-when-credentials-configured",
+    "private_endpoint_default": false
+  },
+  "core_config": {
+    "section": "notifiers",
+    "fields": [
+      "id",
+      "name",
+      "type",
+      "endpoint",
+      "allow_private_endpoint",
+      "to",
+      "token",
+      "headers",
+      "enabled"
+    ],
+    "secret_fields": ["token"],
+    "delivery_path": "asynchronous",
+    "blocks_waf_request_thread": false
+  },
+  "forbidden": [
+    "executable",
+    "container_image",
+    "wasm",
+    "in_process_module",
+    "network_egress",
+    "direct_actions",
+    "secret_values_in_pack",
+    "sidecar_runtime"
+  ],
+  "limits": {
+    "max_config_fields": 24,
+    "max_secret_fields": 16,
+    "max_endpoint_templates": 4,
+    "max_template_bytes": 512,
+    "max_capabilities": 2
+  }
+}

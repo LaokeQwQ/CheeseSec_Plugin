@@ -109,7 +109,7 @@ examples/store-v1/ is contract-only and contains no installable or published
 package. Actual offline verification and activation remain CheeseWAF runtime
 operations; this repository never stores private keys or generated .crp files.
 
-## Jev、EDR 与 DuckDB 扩展契约（规划）
+## Jev、EDR、DuckDB 与通知提供商扩展契约（规划）
 
 `schema/extensions-v1/extension-descriptor.schema.json` 定义了不修改 CRP v1
 解析器的扩展描述契约。它目前只允许 descriptor-only 规划示例，不代表可安装、
@@ -135,6 +135,28 @@ operations; this repository never stores private keys or generated .crp files.
 消息边界也已固定为 `risk-hint/v1`、`waf-security-event/v1`、
 `analysis-record/v1` 和 `audit-parquet/v1`，并分别提供 schema 与脱敏 fixture；
 fixture 只用于契约校验，不代表线上消息总线或签名密钥已经接入。
+
+### 通知提供商包（规划）
+
+`schema/extensions-v1/notifier-provider.schema.json` 定义了 `crp.cheesewaf.io/notifier/v1`
+纯契约，用来描述核心通知器的投递目的地格式。它不是可执行 sidecar，也不能被 CRP v1
+安装：没有可执行文件、镜像、WASM 或网络栈，`endpoint_templates` 只允许 `https://`
+目标，且 `egress_owner` 固定为 `cheesewaf-core`。
+
+- 允许的类型是 `webhook`、`dingtalk`、`feishu`、`wecom`、`telegram` 和 `email`。
+- `secret_fields` 只写以 `_ref` 结尾的引用名，不写值；Token、Webhook 明文和密钥都由
+  核心配置或秘密存储提供，不进入 pack。
+- 当前 sidecar descriptor 只允许 `observe`、`candidate_snapshot`、`hint`、`health`，
+  且 `egress` 固定为 `deny`，没有通知能力。出站只能走 core notifier，由核心统一处理
+  超时、重试、私网策略和审计。
+- `policy/notifier-providers.json` 固定 `status=planned`、`installable=false`、
+  `executable=false`、`runtime_capability_grant=false`。
+- `examples/extensions/notifier-provider.json` 是 Feishu 的契约样例，只用于字段和边界
+  校验，不是可安装包，也不表示该 pack 已经可以加载或发布。
+
+`scripts/validate_notifier_contracts.py` 校验 schema、策略和示例的一致性。provider pack 的
+运行时加载、秘密引用和投递审计不由本仓库交付，投递适配以 CheeseWAF 阶段验收为准。详见
+[`docs/extension-contracts.md`](docs/extension-contracts.md)。
 
 ## DuckDB 分析扩展边界（规划）
 

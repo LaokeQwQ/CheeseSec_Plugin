@@ -1,0 +1,27 @@
+{
+  "api_version": "crp.cheesewaf.io/notifier/v1",
+  "provider_id": "official-feishu-bot-1.0.0",
+  "type": "feishu",
+  "version": "1.0.0",
+  "namespace": "official/notifier-feishu",
+  "source": "future-contract",
+  "source_root": "vendor-root-v1",
+  "config_schema": {
+    "dialect": "cheesewaf-notifier-config/v1",
+    "fields": [
+      { "name": "target_name", "kind": "string", "required": false, "max_length": 128 }
+    ]
+  },
+  "secret_fields": ["webhook_ref"],
+  "endpoint_templates": [
+    {
+      "name": "notify",
+      "url_template": "https://open.feishu.cn/open-apis/bot/v2/hook/{webhook_ref}",
+      "method": "POST",
+      "egress_owner": "cheesewaf-core",
+      "variables": ["webhook_ref"]
+    }
+  ],
+  "capabilities": ["alert_delivery", "test_delivery"],
+  "publication": { "status": "planned", "installable": false, "crp_binding": "descriptor-only" }
+}

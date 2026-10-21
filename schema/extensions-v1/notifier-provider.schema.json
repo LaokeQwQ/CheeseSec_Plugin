@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://store.cheesesec.com/schema/extensions/v1/notifier-provider.schema.json",
+  "title": "CheeseWAF notifier provider pack (planned)",
+  "description": "A descriptor-only notifier provider contract. It describes a destination format for the core notifier. It carries no executable, no plugin network egress, and no installable CRP binding.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "api_version",
+    "provider_id",
+    "type",
+    "version",
+    "namespace",
+    "source",
+    "source_root",
+    "config_schema",
+    "secret_fields",
+    "endpoint_templates",
+    "capabilities",
+    "publication"
+  ],
+  "properties": {
+    "api_version": { "const": "crp.cheesewaf.io/notifier/v1" },
+    "provider_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+    "type": { "enum": ["webhook", "dingtalk", "feishu", "wecom", "telegram", "email"] },
+    "version": { "$ref": "#/$defs/version" },
+    "namespace": { "$ref": "#/$defs/namespace" },
+    "source": { "$ref": "#/$defs/identifier" },
+    "source_root": { "$ref": "#/$defs/identifier" },
+    "config_schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dialect", "fields"],
+      "properties": {
+        "dialect": { "const": "cheesewaf-notifier-config/v1" },
+        "fields": {
+          "type": "array",
+          "maxItems": 24,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "kind", "required"],
+            "properties": {
+              "name": { "$ref": "#/$defs/field_name" },
+              "kind": { "enum": ["endpoint", "recipient", "string", "enum"] },
+              "required": { "type": "boolean" },
+              "max_length": { "type": "integer", "minimum": 1, "maximum": 2048 }
+            }
+          }
+        }
+      }
+    },
+    "secret_fields": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/secret_ref" }
+    },
+    "endpoint_templates": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "url_template", "method", "egress_owner", "variables"],
+        "properties": {
+          "name": { "enum": ["notify", "probe"] },
+          "url_template": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 512,
+            "pattern": "^https://[A-Za-z0-9${}._~:/?#\\[\\]@!&'()*+,;=%-]+$"
+          },
+          "method": { "const": "POST" },
+          "egress_owner": { "const": "cheesewaf-core" },
+          "variables": {
+            "type": "array",
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/field_name" }
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "enum": ["alert_delivery", "test_delivery"] }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "installable", "crp_binding"],
+      "properties": {
+        "status": { "const": "planned" },
+        "installable": { "const": false },
+        "crp_binding": { "const": "descriptor-only" }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?!.*[.][.])[A-Za-z0-9:/._@+-]+$"
+    },
+    "field_name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "secret_ref": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,31}_ref$"
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^(official/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|enterprise/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|(community|personal|test|development)/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63})$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+([.][0-9]+){0,2}([-][0-9A-Za-z.-]+)?([+][0-9A-Za-z.-]+)?$"
+    }
+  }
+}

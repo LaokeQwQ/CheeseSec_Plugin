@@ -55,6 +55,9 @@ jobs:
       - name: Validate planned Jev, EDR and DuckDB extension contracts
         run: python scripts/validate_extension_contracts.py
 
+      - name: Validate planned notifier provider contracts
+        run: python scripts/validate_notifier_contracts.py
+
       - name: Validate offline verifier entry point
         run: python scripts/verify_offline_import.py --help
 
