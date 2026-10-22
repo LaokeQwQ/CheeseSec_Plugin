@@ -3,6 +3,10 @@
   "main": "edge/index.ts",
   "compatibility_date": "2026-08-18",
   "workers_dev": true,
+  "rules": [
+    { "type": "Text", "globs": ["**/storefront/*.html", "**/storefront/*.css", "**/storefront/*.js", "**/storefront/*.mjs"], "fallthrough": true },
+    { "type": "Data", "globs": ["**/storefront/*.png"], "fallthrough": true }
+  ],
   "r2_buckets": [
     { "binding": "PUBLICATION_INDEX", "bucket_name": "cheesesec-publication-index-prod" },
     { "binding": "PUBLIC_RESOURCES", "bucket_name": "cheesesec-public-resources-prod" }

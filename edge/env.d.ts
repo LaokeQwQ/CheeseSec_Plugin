@@ -4,3 +4,8 @@ interface Env {
   PUBLIC_RESOURCES: R2Bucket;
   EDGE_POLICY_VERSION: string;
 }
+declare module "*.html" { const text: string; export default text; }
+declare module "*.css" { const text: string; export default text; }
+declare module "*.js" { const text: string; export default text; }
+declare module "*.mjs" { const text: string; export default text; }
+declare module "*.png" { const bytes: Uint8Array; export default bytes; }

@@ -11,6 +11,7 @@ before(async () => {
     bundle: true,
     format: "esm",
     platform: "browser",
+    loader: { ".html": "text", ".css": "text", ".js": "text", ".mjs": "text", ".png": "binary" },
     write: false,
     tsconfigRaw: {},
   });
@@ -88,11 +89,35 @@ test("publication HEAD and conditional reads retain metadata without a response 
 });
 
 test("unknown public paths never fall through to a bucket or an origin", async () => {
-  for (const path of ["store.cheesesec.com/", "ota.cheesesec.com/", "res.cheesesec.com/", "store.cheesesec.com/api/sites", "store.cheesesec.com/v1/policy/private.json", "ota.cheesesec.com/v1/channels/latest/index.json", "res.cheesesec.com/resources/private", "store.cheesesec.com/v1/schema/crp/%2e%2e%2fsecret.schema.json"]) {
+  for (const path of ["ota.cheesesec.com/", "res.cheesesec.com/", "store.cheesesec.com/api/sites", "store.cheesesec.com/v1/policy/private.json", "ota.cheesesec.com/v1/channels/latest/index.json", "res.cheesesec.com/resources/private", "store.cheesesec.com/v1/schema/crp/%2e%2e%2fsecret.schema.json"]) {
     const { env, calls } = fixture();
     const response = await worker.fetch(new Request(`https://${path}`), env);
     assert.equal(response.status, 404, path);
     assert.deepEqual(calls, []);
+  }
+});
+
+test("ordinary browsers receive a store page while v1 remains a separate JSON read surface", async () => {
+  const { env, calls } = fixture();
+  const page = await worker.fetch(new Request("https://store.cheesesec.com/", { headers: { cookie: "cheesec-locale=zh-CN" } }), env);
+  assert.equal(page.status, 200);
+  assert.equal(page.headers.get("content-type"), "text/html; charset=utf-8");
+  assert.match(await page.text(), /<html\b/);
+  assert.match(page.headers.get("content-security-policy"), /script-src 'self'/);
+  assert.deepEqual(calls, []);
+  const api = await worker.fetch(new Request("https://store.cheesesec.com/v1/catalog/index.json"), env);
+  assert.equal(api.status, 200);
+  assert.equal(api.headers.get("content-type"), "application/json; charset=utf-8");
+  const head = await worker.fetch(new Request("https://store.cheesesec.com/", { method: "HEAD" }), env);
+  assert.equal(head.status, 200);
+  assert.equal(head.body, null);
+  for (const path of ["/storefront.css", "/storefront.js", "/catalog.mjs", "/logo.png"]) {
+    const asset = await worker.fetch(new Request(`https://store.cheesesec.com${path}`), env);
+    assert.equal(asset.status, 200);
+    assert.equal(asset.headers.get("x-content-type-options"), "nosniff");
+    const rejected = await worker.fetch(new Request(`https://store.cheesesec.com${path}`, { method: "POST" }), env);
+    assert.equal(rejected.status, 405);
+    assert.equal(rejected.headers.get("allow"), "GET, HEAD");
   }
 });
 
