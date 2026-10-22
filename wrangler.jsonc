@@ -1,0 +1,17 @@
+{
+  "name": "cheesesec-publication",
+  "main": "edge/index.ts",
+  "compatibility_date": "2026-08-18",
+  "workers_dev": true,
+  "r2_buckets": [
+    { "binding": "PUBLICATION_INDEX", "bucket_name": "cheesesec-publication-index-prod" },
+    { "binding": "PUBLIC_RESOURCES", "bucket_name": "cheesesec-public-resources-prod" }
+  ],
+  "vars": { "EDGE_POLICY_VERSION": "store-ota-v1" },
+  "routes": [
+    { "pattern": "store.cheesesec.com", "custom_domain": true },
+    { "pattern": "ota.cheesesec.com", "custom_domain": true },
+    { "pattern": "res.cheesesec.com", "custom_domain": true }
+  ],
+  "observability": { "enabled": true }
+}
