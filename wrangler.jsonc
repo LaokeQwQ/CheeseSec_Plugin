@@ -4,7 +4,7 @@
   "compatibility_date": "2026-08-18",
   "workers_dev": true,
   "rules": [
-    { "type": "Text", "globs": ["**/storefront/*.html", "**/storefront/*.css", "**/storefront/*.js", "**/storefront/*.mjs"], "fallthrough": true },
+    { "type": "Text", "globs": ["**/storefront/*.html", "**/storefront/*.css", "**/storefront/*.js", "**/storefront/*.mjs", "**/storefront/*.svg"], "fallthrough": true },
     { "type": "Data", "globs": ["**/storefront/*.png"], "fallthrough": true }
   ],
   "r2_buckets": [

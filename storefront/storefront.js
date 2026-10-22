@@ -67,7 +67,7 @@ function applyLanguage() {
   document.title = state.language === "zh" ? "CheeseSec · 插件商店" : "CheeseSec · Plugin store";
   document.querySelectorAll("[data-i18n]").forEach(element => textLines(element, t(element.dataset.i18n)));
   document.querySelectorAll(".docs-link").forEach(link => { link.href = docsRoot(); });
-  document.querySelectorAll(".developer-link").forEach(link => { link.href = docsRoot() + "crp-development/"; });
+  document.querySelectorAll(".developer-link").forEach(link => { link.href = docsRoot(); });
   byId("plugin-search").placeholder = t("searchPlaceholder");
   byId("plugin-search").setAttribute("aria-label", t("searchLabel"));
   byId("clear-search").setAttribute("aria-label", t("clearSearch"));

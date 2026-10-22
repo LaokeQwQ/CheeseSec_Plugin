@@ -9,3 +9,4 @@ declare module "*.css" { const text: string; export default text; }
 declare module "*.js" { const text: string; export default text; }
 declare module "*.mjs" { const text: string; export default text; }
 declare module "*.png" { const bytes: Uint8Array; export default bytes; }
+declare module "*.svg" { const text: string; export default text; }

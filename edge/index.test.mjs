@@ -11,7 +11,7 @@ before(async () => {
     bundle: true,
     format: "esm",
     platform: "browser",
-    loader: { ".html": "text", ".css": "text", ".js": "text", ".mjs": "text", ".png": "binary" },
+    loader: { ".html": "text", ".css": "text", ".js": "text", ".mjs": "text", ".png": "binary", ".svg": "text" },
     write: false,
     tsconfigRaw: {},
   });
