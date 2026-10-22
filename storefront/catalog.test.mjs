@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { categoryForRelease, filterCatalog, normalizeCatalog } from "./catalog.mjs";
+import { categoryForRelease, downloadUrlForRelease, filterCatalog, lifecycleExampleForRelease, normalizeCatalog } from "./catalog.mjs";
 
 function release(plugin = "threat-intel", sequence = 1, overrides = {}) {
   const namespace = `official/${plugin}`;
@@ -8,7 +8,7 @@ function release(plugin = "threat-intel", sequence = 1, overrides = {}) {
     api_version: "store.cheesesec.com/v1", record_type: "publication", plugin_id: plugin,
     namespace, trust_level: "official", version: "1.0.0", source: "official", immutable: true,
     release_id: `${namespace}@1.0.0#${sequence}`, release_sequence: sequence,
-    crp: { size: 1024, digests: { sha256: "a".repeat(64) } },
+    crp: { size: 1024, digests: { sha256: "a".repeat(64) }, resource_url: `https://res.cheesesec.com/sha256/${"a".repeat(64)}/${plugin}.crp` },
     review: { decision: "approved" }, signature_evidence: { status: "verified" }, ...overrides,
   };
 }
@@ -79,4 +79,43 @@ test("search filters name namespace and source, with independent sort and catego
   assert.deepEqual(filterCatalog(plugins, { sort: "name" }).map(x => x.name), ["audit-report", "feishu-notifier", "threat-intel"]);
   assert.deepEqual(filterCatalog(plugins, { trust: "community" }), []);
   assert.equal(plugins[0].name, "audit-report");
+});
+
+test("download URL is limited to the exact digest-bound public CRP resource", () => {
+  const item = release();
+  const valid = item.crp.resource_url;
+  assert.equal(downloadUrlForRelease(item), valid);
+  assert.equal(normalizeCatalog(catalog([item])).plugins[0].downloadUrl, valid);
+  for (const resource_url of [
+    valid.replace("https:", "http:"), valid.replace("res.cheesesec.com", "res.cheesesec.com.evil.example"),
+    valid.replace("res.cheesesec.com", "user:password@res.cheesesec.com"),
+    valid.replace("res.cheesesec.com", "res.cheesesec.com:443"), valid + "?download=1", valid + "#file",
+    valid.replace("/" + "a".repeat(64) + "/", "/" + "b".repeat(64) + "/"),
+    valid.replace("threat-intel.crp", "../threat-intel.crp"), valid.replace("threat-intel.crp", "file%2ecrp"),
+    valid.replace("threat-intel.crp", "file..crp"), valid.replace(".crp", ".zip"), "javascript:alert(1)",
+  ]) {
+    const candidate = { ...item, crp: { ...item.crp, resource_url } };
+    assert.equal(downloadUrlForRelease(candidate), null, resource_url);
+    assert.throws(() => normalizeCatalog(catalog([candidate])), /Invalid published resource URL/);
+  }
+});
+
+test("known Hello releases carry exact platform and lifecycle-only display metadata", () => {
+  const items = ["linux-amd64", "darwin-arm64"].map(platform => {
+    const pluginId = `hello-cheesesec-${platform}`;
+    return release(pluginId, 1, { version: "0.1.0", release_id: `official/${pluginId}@0.1.0#1` });
+  });
+  const { plugins } = normalizeCatalog(catalog(items));
+  assert.equal(plugins.length, 2);
+  for (const plugin of plugins) {
+    assert.equal(plugin.name, "Hello CheeseSec");
+    assert.equal(plugin.lifecycleExample.kind, "lifecycle-example");
+    assert.equal(plugin.downloadUrl, plugin.raw.crp.resource_url);
+  }
+  assert.deepEqual(plugins.map(x => x.lifecycleExample.platformLabel).sort(), ["Linux · amd64", "macOS · arm64"].sort());
+  assert.equal(filterCatalog(plugins, { query: "hello-cheesesec-linux-amd64" })[0].lifecycleExample.platform, "linux-amd64");
+  assert.equal(filterCatalog(plugins, { query: "macOS" }).length, 1);
+  assert.equal(lifecycleExampleForRelease(release("hello-cheesesec-linux-amd64")), null, "unknown version must not inherit compatibility");
+  assert.equal(lifecycleExampleForRelease({ ...items[0], namespace: "community/acme/hello-cheesesec-linux-amd64", trust_level: "community" }), null);
+  assert.equal(lifecycleExampleForRelease(release("unrelated")), null);
 });

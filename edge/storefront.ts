@@ -3,7 +3,6 @@ import styles from "../storefront/storefront.css";
 import script from "../storefront/storefront.js";
 import catalog from "../storefront/catalog.mjs";
 import logo from "../storefront/logo.png";
-import pluginsLogo from "../storefront/plugins-logo.svg";
 import { methodNotAllowed } from "./response-policy";
 
 const assets = new Map<string, { body: string | Uint8Array; type: string }>([
@@ -12,7 +11,6 @@ const assets = new Map<string, { body: string | Uint8Array; type: string }>([
   ["/storefront.js", { body: script, type: "text/javascript; charset=utf-8" }],
   ["/catalog.mjs", { body: catalog, type: "text/javascript; charset=utf-8" }],
   ["/logo.png", { body: logo, type: "image/png" }],
-  ["/plugins-logo.svg", { body: pluginsLogo, type: "image/svg+xml" }],
   ["/favicon.ico", { body: logo, type: "image/png" }],
 ]);
 

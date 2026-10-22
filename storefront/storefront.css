@@ -24,7 +24,6 @@
   .hero-description,.catalog-state>p{font-size:14px}
   .brand-mark{width:40px;height:40px;flex:none}
   .brand-mark img{display:block;width:40px;height:40px;object-fit:contain}
-  .extension-tile .plugin-product-logo{display:block;width:80px;height:80px;object-fit:contain;flex:none;margin-top:-10px;margin-left:-8px}
   .eyebrow,.result-count{font-size:12px}
   .catalog-state .filled-button{min-height:46px;font-size:14px}
   .search-field input{font-size:14px}
@@ -38,6 +37,16 @@
   .guide-card h3{font-size:15px}
   .guide-card{min-height:156px}
   .plugin-card p,.plugin-card-bottom,.trust-chip,.plugin-card-version{font-size:12px}
+  .platform-chip{display:inline-flex;align-self:flex-start;align-items:center;min-height:26px;padding:3px 10px;border-radius:8px;background:var(--surface-container);color:var(--on-surface-variant);font-size:12px;font-weight:550}
+  .plugin-card .plugin-purpose{font-size:13px;line-height:1.75;max-width:28ch}
+  .detail-lifecycle{margin-top:20px;padding:18px 20px;border-radius:18px;background:var(--sage);color:var(--sage-ink);font-size:13px;line-height:1.8}
+  .detail-lifecycle strong{font-size:14px;font-weight:650}
+  .detail-lifecycle p{margin-top:7px}
+  .detail-lifecycle .detail-platform{font-weight:650}
+  .detail-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .detail-actions .filled-button{min-height:48px;font-size:14px}
+  .detail-guides{display:flex;gap:7px 22px;flex-wrap:wrap;margin-top:16px;color:var(--primary);font-size:12px}
+  .detail-guides a{display:inline-flex;align-items:center;min-height:44px;text-decoration:underline;text-underline-offset:4px}
   @media(max-width:800px){
     .hero-description{font-size:14px}
     .eyebrow{font-size:12px}

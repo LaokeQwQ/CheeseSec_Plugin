@@ -5,6 +5,11 @@ const NAMESPACE = /^(?:official\/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|(?:enterprise|c
 const PLUGIN_ID = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
 const VERSION = /^[0-9]+(?:\.[0-9]+){0,2}(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const SHA256 = /^[0-9a-f]{64}$/;
+const RESOURCE = /^https:\/\/res\.cheesesec\.com\/sha256\/([0-9a-f]{64})\/([A-Za-z0-9][A-Za-z0-9._+-]{0,249}\.crp)$/;
+const HELLO_PLATFORMS = new Map([
+  ["hello-cheesesec-linux-amd64", { platform: "linux-amd64", platformLabel: "Linux · amd64" }],
+  ["hello-cheesesec-darwin-arm64", { platform: "darwin-arm64", platformLabel: "macOS · arm64" }],
+]);
 
 function object(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -16,6 +21,27 @@ function boundedString(value, max = 128) {
 
 function safeSequence(value) {
   return Number.isSafeInteger(value) && value >= 0;
+}
+
+export function downloadUrlForRelease(record) {
+  const value = record?.crp?.resource_url;
+  const sha256 = record?.crp?.digests?.sha256;
+  if (typeof value !== "string" || !SHA256.test(sha256)) return null;
+  const match = RESOURCE.exec(value);
+  if (!match || match[1] !== sha256 || match[2].includes("..")) return null;
+  // The canonical spelling rejects credentials, explicit ports, URL queries,
+  // fragments and encoded filenames before a browser ever receives the link.
+  const parsed = new URL(value);
+  return parsed.protocol === "https:" && parsed.hostname === "res.cheesesec.com"
+    && !parsed.username && !parsed.password && !parsed.port && !parsed.search && !parsed.hash
+    && parsed.href === value ? value : null;
+}
+
+export function lifecycleExampleForRelease(record) {
+  const platform = HELLO_PLATFORMS.get(record?.plugin_id);
+  if (!platform || record.namespace !== `official/${record.plugin_id}`
+    || record.trust_level !== "official" || record.version !== "0.1.0") return null;
+  return { ...platform, name: "Hello CheeseSec", kind: "lifecycle-example" };
 }
 
 export function categoryForRelease(record) {
@@ -43,10 +69,14 @@ function projectRelease(record) {
     || !object(record.crp.digests) || !SHA256.test(record.crp.digests.sha256)) {
     throw new Error("Invalid published catalog release");
   }
+  const downloadUrl = downloadUrlForRelease(record);
+  if (!downloadUrl) throw new Error("Invalid published resource URL");
+  const lifecycleExample = lifecycleExampleForRelease(record);
   return {
     id: record.release_id,
     namespace: record.namespace,
-    name: record.plugin_id || record.namespace.split("/").at(-1),
+    name: lifecycleExample?.name || record.plugin_id || record.namespace.split("/").at(-1),
+    pluginId: record.plugin_id,
     version: record.version,
     trustLevel: record.trust_level,
     category: categoryForRelease(record),
@@ -54,6 +84,8 @@ function projectRelease(record) {
     sha256: record.crp.digests.sha256,
     size: record.crp.size,
     source: record.source,
+    downloadUrl,
+    lifecycleExample,
     raw: record,
   };
 }
@@ -87,7 +119,7 @@ export function normalizeCatalog(payload) {
 export function filterCatalog(plugins, { query = "", category = "all", trust = "all", sort = "newest" } = {}) {
   const search = typeof query === "string" ? query.normalize("NFKC").trim().toLowerCase() : "";
   const filtered = plugins.filter(plugin => {
-    const haystack = [plugin.name, plugin.namespace, plugin.version, plugin.source].join(" ").normalize("NFKC").toLowerCase();
+    const haystack = [plugin.name, plugin.pluginId, plugin.namespace, plugin.version, plugin.source, plugin.lifecycleExample?.platformLabel].join(" ").normalize("NFKC").toLowerCase();
     return (!search || haystack.includes(search))
       && (category === "all" || plugin.category === category)
       && (trust === "all" || plugin.trustLevel === trust);

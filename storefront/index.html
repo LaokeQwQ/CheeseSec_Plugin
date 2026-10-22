@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#fdfaf2">
   <meta name="description" content="发现 CheeseSec 插件，了解扩展能力、版本和发布信息。">
   <title>CheeseSec · 插件商店</title>
-  <link rel="icon" href="/plugins-logo.svg" type="image/svg+xml">
+  <link rel="icon" href="/logo.png" type="image/png">
   <link rel="stylesheet" href="/storefront.css">
   <script type="module" src="/storefront.js"></script>
 </head>
@@ -56,7 +56,7 @@
         <span class="orbit orbit-one"></span><span class="orbit orbit-two"></span>
         <div class="extension-tile tile-back"><svg class="icon"><use href="#icon-chart"/></svg><span class="tile-line"></span><span class="tile-line short"></span></div>
         <div class="extension-tile tile-middle"><svg class="icon"><use href="#icon-bell"/></svg><span class="tile-line"></span><span class="tile-line short"></span></div>
-        <div class="extension-tile tile-front"><img class="plugin-product-logo" src="/plugins-logo.svg" width="80" height="80" alt=""><span class="tile-connector"></span><span class="tile-line"></span><span class="tile-line short"></span></div>
+        <div class="extension-tile tile-front"><svg class="icon"><use href="#icon-puzzle"/></svg><span class="tile-connector"></span><span class="tile-line"></span><span class="tile-line short"></span></div>
         <span class="art-spark spark-one">+</span><span class="art-spark spark-two">+</span>
       </div>
     </section>
@@ -100,7 +100,21 @@
     </div>
   </main>
   <footer class="site-footer"><a class="footer-brand" href="https://cheesesec.com/">CheeseSec</a><p data-i18n="footerNote">让安全的能力，触手可及。</p><div><a class="docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" data-i18n="docs">文档</a><a href="/v1/catalog/index.json" data-i18n="catalogApi">目录 API</a><a href="https://github.com/LaokeQwQ/CheeseSec_Plugin" rel="noreferrer">GitHub</a></div></footer>
-  <dialog id="plugin-dialog" class="plugin-dialog" aria-labelledby="detail-title"><button id="close-dialog" class="icon-button dialog-close" type="button" aria-label="关闭详情"><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button><div class="detail-icon"><svg class="icon" aria-hidden="true"><use href="#icon-puzzle"/></svg></div><span id="detail-trust" class="detail-trust"></span><h2 id="detail-title"></h2><p id="detail-namespace" class="detail-namespace"></p><dl id="detail-metadata"></dl><p class="detail-note" data-i18n="detailNote">请在插件说明中确认适用的 CheeseSec 产品、兼容版本与安装方式。</p><a class="filled-button docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/"><span data-i18n="viewDocs">查看使用文档</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a></dialog>
+  <dialog id="plugin-dialog" class="plugin-dialog" aria-labelledby="detail-title">
+    <button id="close-dialog" class="icon-button dialog-close" type="button" aria-label="关闭详情"><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button>
+    <div class="detail-icon"><svg class="icon" aria-hidden="true"><use href="#icon-puzzle"/></svg></div>
+    <span id="detail-trust" class="detail-trust"></span>
+    <h2 id="detail-title"></h2>
+    <p id="detail-namespace" class="detail-namespace"></p>
+    <div id="detail-lifecycle" class="detail-lifecycle" hidden></div>
+    <dl id="detail-metadata"></dl>
+    <p class="detail-note" data-i18n="detailNote">请在插件说明中确认适用的 CheeseSec 产品、兼容版本与安装方式。</p>
+    <div class="detail-actions">
+      <a id="detail-download" class="filled-button" rel="noreferrer" download><span data-i18n="downloadPackage">下载 .crp 包</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+      <a class="text-button docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" data-i18n="viewDocs">查看使用文档</a>
+    </div>
+    <div class="detail-guides"><a class="docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" data-i18n="verificationGuide">签名校验说明</a><a class="docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" data-i18n="compatibilityGuide">兼容性与安装说明</a></div>
+  </dialog>
   <noscript><p class="noscript-note">请启用 JavaScript 以搜索和筛选插件。你也可以直接查看 <a href="/v1/catalog/index.json">插件目录</a>。 Enable JavaScript to browse plugins.</p></noscript>
 </body>
 </html>

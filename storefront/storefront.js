@@ -12,6 +12,7 @@ const copy = {
     footerNote: "让安全的能力，触手可及。", catalogApi: "目录 API", detailNote: "请在插件说明中确认适用的 CheeseSec 产品、兼容版本与安装方式。", viewDocs: "查看使用文档",
     searchPlaceholder: "搜索插件名称或发布者", searchLabel: "搜索插件", clearSearch: "清除搜索", themeLight: "切换浅色模式", themeDark: "切换深色模式", closeDialog: "关闭详情", homeLabel: "CheeseSec 首页", navigation: "主导航", detailsLabel: "查看插件详情", version: "版本", publisher: "发布者", packageSize: "资源大小", releaseSequence: "发布序号", digest: "SHA-256 摘要",
     trustOfficial: "官方", trustEnterprise: "企业", trustCommunity: "社区", trustPersonal: "个人", trustTest: "测试", trustDevelopment: "开发",
+    lifecycleDescription: "生命周期示例，不提供防护能力。", lifecycleDetails: "这个示例仅用于验证启动、健康检查和停止流程，不检测攻击，也不采集数据。", compatibility: "适用平台", platformLinux: "仅支持 Linux amd64。", platformMac: "仅支持 macOS arm64（Apple 芯片）。", downloadPackage: "下载 .crp 包", verificationGuide: "签名校验说明", compatibilityGuide: "兼容性与安装说明",
   },
   en: {
     skip: "Skip to plugin catalog", store: "Plugin store", explore: "Explore", docs: "Documentation",
@@ -24,6 +25,7 @@ const copy = {
     footerNote: "More possibilities. The same care for security.", catalogApi: "Catalog API", detailNote: "Check the plugin documentation for supported CheeseSec products, compatible versions, and installation steps.", viewDocs: "Read the documentation",
     searchPlaceholder: "Search plugin names or publishers", searchLabel: "Search plugins", clearSearch: "Clear search", themeLight: "Use light theme", themeDark: "Use dark theme", closeDialog: "Close plugin details", homeLabel: "CheeseSec home", navigation: "Main navigation", detailsLabel: "View plugin details", version: "Version", publisher: "Publisher", packageSize: "Package size", releaseSequence: "Release sequence", digest: "SHA-256 digest",
     trustOfficial: "Official", trustEnterprise: "Enterprise", trustCommunity: "Community", trustPersonal: "Personal", trustTest: "Test", trustDevelopment: "Development",
+    lifecycleDescription: "Lifecycle example. No protection capabilities.", lifecycleDetails: "This example only checks startup, health, and shutdown. It does not detect attacks or collect data.", compatibility: "Supported platform", platformLinux: "Linux amd64 only.", platformMac: "macOS arm64 (Apple silicon) only.", downloadPackage: "Download .crp package", verificationGuide: "Signature verification", compatibilityGuide: "Compatibility & installation",
   },
 };
 
@@ -103,11 +105,16 @@ function renderCard(plugin) {
   card.setAttribute("aria-label", `${t("detailsLabel")}: ${plugin.name}`);
   const top = makeElement("div", "plugin-card-top");
   const glyph = makeElement("span", "plugin-card-icon");
-  glyph.append(icon(categoryIcons[plugin.category] || "puzzle"));
+  glyph.append(icon(plugin.lifecycleExample ? "puzzle" : categoryIcons[plugin.category] || "puzzle"));
   top.append(glyph, makeElement("span", "trust-chip", t(trustKeys[plugin.trustLevel] || "trustCommunity")));
   const bottom = makeElement("div", "plugin-card-bottom");
   bottom.append(makeElement("span", "plugin-card-version", `v${plugin.version}`), icon("arrow"));
-  card.append(top, makeElement("h3", "", plugin.name), makeElement("p", "", t(categoryKeys[plugin.category] || "categoryTools")), bottom);
+  card.append(top, makeElement("h3", "", plugin.name));
+  if (plugin.lifecycleExample) {
+    card.append(makeElement("span", "platform-chip", plugin.lifecycleExample.platformLabel));
+    card.append(makeElement("p", "plugin-purpose", t("lifecycleDescription")));
+  } else card.append(makeElement("p", "", t(categoryKeys[plugin.category] || "categoryTools")));
+  card.append(bottom);
   card.addEventListener("click", () => {
     state.currentPlugin = plugin;
     fillDetails(plugin);
@@ -158,9 +165,20 @@ function fillDetails(plugin) {
   byId("detail-namespace").textContent = plugin.namespace;
   byId("detail-trust").textContent = t(trustKeys[plugin.trustLevel] || "trustCommunity");
   const fields = [["version", plugin.version], ["publisher", plugin.source], ["packageSize", formatSize(plugin.size)], ["releaseSequence", String(plugin.releaseSequence)], ["digest", plugin.sha256]];
+  if (plugin.lifecycleExample) fields.unshift(["compatibility", plugin.lifecycleExample.platformLabel]);
   const metadata = byId("detail-metadata");
   metadata.replaceChildren();
   fields.forEach(([label, value]) => { metadata.append(makeElement("dt", "", t(label)), makeElement("dd", "", value)); });
+  const lifecycle = byId("detail-lifecycle");
+  lifecycle.hidden = !plugin.lifecycleExample;
+  lifecycle.replaceChildren();
+  if (plugin.lifecycleExample) {
+    lifecycle.append(makeElement("strong", "", t("lifecycleDescription")), makeElement("p", "", t("lifecycleDetails")), makeElement("p", "detail-platform", t(plugin.lifecycleExample.platform === "linux-amd64" ? "platformLinux" : "platformMac")));
+  }
+  const download = byId("detail-download");
+  download.href = plugin.downloadUrl;
+  download.setAttribute("download", plugin.downloadUrl.split("/").at(-1));
+  download.setAttribute("aria-label", `${t("downloadPackage")}: ${plugin.name}${plugin.lifecycleExample ? ` · ${plugin.lifecycleExample.platformLabel}` : ""}`);
 }
 
 function formatSize(value) {
