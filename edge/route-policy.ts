@@ -48,8 +48,10 @@ const STATIC_PUBLICATION_KEYS: ReadonlyMap<string, string> = new Map([
 const SCHEMA_PATH =
   /^\/v1\/schema\/(store|crp)\/([a-z0-9][a-z0-9-]*)\.schema\.json$/;
 const OTA_PATH = /^\/v1\/channels\/(stable|canary|dev)\/index\.json$/;
+const SOFTWARE_PATH = /^\/v1\/software\/channels\/(stable|canary|dev)\/index\.json$/;
 const RESOURCE_PATH =
   /^\/sha256\/([0-9a-f]{64})\/([A-Za-z0-9][A-Za-z0-9._+-]*)$/;
+const RELEASE_PATH = /^\/releases\/(v\d+\.\d+\.\d+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?)\/([A-Za-z0-9][A-Za-z0-9._+-]{0,254})$/;
 const CREDENTIAL_QUERY_KEY =
   /^(?:access[_-]?token|api[_-]?key|authorization|cookie|credential|csrf|secret|signature|token)$/i;
 
@@ -175,6 +177,15 @@ function classifyPublication(
   }
 
   if (url.hostname === "ota.cheesesec.com") {
+    const softwareMatch = url.pathname.match(SOFTWARE_PATH);
+    if (softwareMatch) {
+      const channel = softwareMatch[1] as "stable" | "canary" | "dev";
+      return methodDecision("publication", url.hostname, request, {
+        key: `software/channels/${channel}/index.json`,
+        publicationClass: "ota",
+        channel,
+      });
+    }
     const otaMatch = url.pathname.match(OTA_PATH);
     if (otaMatch) {
       const channel = otaMatch[1] as "stable" | "canary" | "dev";
@@ -200,6 +211,13 @@ function classifyResource(request: Request, url: URL): RouteDecision {
   }
 
   const resourceMatch = url.pathname.match(RESOURCE_PATH);
+  const releaseMatch = url.pathname.match(RELEASE_PATH);
+  if (releaseMatch && !releaseMatch[1].includes("..") && !releaseMatch[2].includes("..")) {
+    return methodDecision("resource", url.hostname, request, {
+      key: `releases/${releaseMatch[1]}/${releaseMatch[2]}`,
+      filename: releaseMatch[2],
+    });
+  }
   if (!resourceMatch) {
     return { kind: "not-found", hostname: url.hostname, methodAllowed: false };
   }
