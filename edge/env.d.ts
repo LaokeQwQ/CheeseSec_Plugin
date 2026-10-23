@@ -3,6 +3,7 @@ interface Env {
   PUBLICATION_INDEX: R2Bucket;
   PUBLIC_RESOURCES: R2Bucket;
   EDGE_POLICY_VERSION: string;
+  SERVICE_COUNTERS?: DurableObjectNamespace;
 }
 declare module "*.html" { const text: string; export default text; }
 declare module "*.css" { const text: string; export default text; }

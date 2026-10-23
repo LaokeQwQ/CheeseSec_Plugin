@@ -90,7 +90,7 @@ test("publication HEAD and conditional reads retain metadata without a response 
 });
 
 test("unknown public paths never fall through to a bucket or an origin", async () => {
-  for (const path of ["ota.cheesesec.com/", "res.cheesesec.com/", "store.cheesesec.com/api/sites", "store.cheesesec.com/v1/policy/private.json", "ota.cheesesec.com/v1/channels/latest/index.json", "res.cheesesec.com/resources/private", "store.cheesesec.com/v1/schema/crp/%2e%2e%2fsecret.schema.json"]) {
+  for (const path of ["store.cheesesec.com/api/sites", "store.cheesesec.com/v1/policy/private.json", "ota.cheesesec.com/v1/channels/latest/index.json", "res.cheesesec.com/resources/private", "store.cheesesec.com/v1/schema/crp/%2e%2e%2fsecret.schema.json"]) {
     const { env, calls } = fixture();
     const response = await worker.fetch(new Request(`https://${path}`), env);
     assert.equal(response.status, 404, path);

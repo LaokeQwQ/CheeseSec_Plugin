@@ -11,6 +11,10 @@
     { "binding": "PUBLICATION_INDEX", "bucket_name": "cheesesec-publication-index-prod" },
     { "binding": "PUBLIC_RESOURCES", "bucket_name": "cheesesec-public-resources-prod" }
   ],
+  "durable_objects": {
+    "bindings": [{ "name": "SERVICE_COUNTERS", "class_name": "ServiceCounters" }]
+  },
+  "migrations": [{ "tag": "service-counters-v1", "new_sqlite_classes": ["ServiceCounters"] }],
   "vars": { "EDGE_POLICY_VERSION": "store-ota-v1" },
   "routes": [
     { "pattern": "store.cheesesec.com", "custom_domain": true },
