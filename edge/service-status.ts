@@ -33,7 +33,7 @@ const DESCRIPTIONS: Record<ServiceName, string> = {
   res: "分发不可变发布包、签名与公开资源。",
 };
 const RESOURCE_PROBE_KEY = "releases/v0.4.5/SHA256SUMS";
-const brandDataUrl = `data:image/png;base64,${btoa(String.fromCharCode(...brandLogo))}`;
+const brandDataUrl = `data:image/png;base64,${btoa(String.fromCharCode(...new Uint8Array(brandLogo)))}`;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
