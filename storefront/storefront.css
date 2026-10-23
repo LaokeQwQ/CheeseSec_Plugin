@@ -39,6 +39,14 @@
   .plugin-card p,.plugin-card-bottom,.trust-chip,.plugin-card-version{font-size:12px}
   .platform-chip{display:inline-flex;align-self:flex-start;align-items:center;min-height:26px;padding:3px 10px;border-radius:8px;background:var(--surface-container);color:var(--on-surface-variant);font-size:12px;font-weight:550}
   .plugin-card .plugin-purpose{font-size:13px;line-height:1.75;max-width:28ch}
+  .planned-card{border-style:dashed}
+  .planned-icon{background:var(--surface-container);color:var(--on-surface-variant)}
+  .planned-chip{display:inline-flex;align-items:center;min-height:22px;padding:3px 10px;border-radius:99px;background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface-variant);font-size:12px;font-weight:600;letter-spacing:.2px;white-space:nowrap}
+  .planned-note{font-size:12px;font-weight:550;color:var(--on-surface-variant)}
+  .planned-card .plugin-purpose{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .detail-planned{margin-top:20px;padding:18px 20px;border-radius:18px;background:var(--surface-container);color:var(--on-surface-variant);font-size:13px;line-height:1.8}
+  .detail-planned strong{font-size:14px;font-weight:650;color:var(--on-surface)}
+  .detail-planned p{margin-top:7px}
   .detail-lifecycle{margin-top:20px;padding:18px 20px;border-radius:18px;background:var(--sage);color:var(--sage-ink);font-size:13px;line-height:1.8}
   .detail-lifecycle strong{font-size:14px;font-weight:650}
   .detail-lifecycle p{margin-top:7px}

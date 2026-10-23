@@ -11,6 +11,7 @@ const copy = {
     gettingStarted: "从这里开始", guideTitle: "认识插件，找到更多可能", guideDescription: "使用说明、发布方式与安全边界，一处读懂。", buildTogether: "和我们一起创造", buildTitle: "把你的想法，变成一个插件", buildDescription: "阅读开发指南，从一个清晰的小能力开始。",
     footerNote: "让安全的能力，触手可及。", catalogApi: "目录 API", detailNote: "请在插件说明中确认适用的 CheeseSec 产品、兼容版本与安装方式。", viewDocs: "查看使用文档",
     searchPlaceholder: "搜索插件名称或发布者", searchLabel: "搜索插件", clearSearch: "清除搜索", themeLight: "切换浅色模式", themeDark: "切换深色模式", closeDialog: "关闭详情", homeLabel: "CheeseSec 首页", navigation: "主导航", detailsLabel: "查看插件详情", version: "版本", publisher: "发布者", packageSize: "资源大小", releaseSequence: "发布序号", digest: "SHA-256 摘要",
+    planned: "规划中", plannedNote: "规划中的扩展包只发布描述符，由宿主实现，当前不可安装。", notInstallable: "暂不可安装", extensionType: "扩展类型", planStatus: "状态", descriptorDigest: "描述符 SHA-256", descriptorReference: "描述符地址", extensionNotifier: "通知提供商", extensionStorage: "存储提供商", extensionDescriptor: "扩展描述符",
     trustOfficial: "官方", trustEnterprise: "企业", trustCommunity: "社区", trustPersonal: "个人", trustTest: "测试", trustDevelopment: "开发",
     lifecycleDescription: "生命周期示例，不提供防护能力。", lifecycleDetails: "这个示例仅用于验证启动、健康检查和停止流程，不检测攻击，也不采集数据。", compatibility: "适用平台", platformLinux: "仅支持 Linux amd64。", platformMac: "仅支持 macOS arm64（Apple 芯片）。", downloadPackage: "下载 .crp 包", verificationGuide: "签名校验说明", compatibilityGuide: "兼容性与安装说明",
   },
@@ -24,6 +25,7 @@ const copy = {
     gettingStarted: "A GOOD PLACE TO START", guideTitle: "Get to know plugins", guideDescription: "Learn how plugins work, how they are released, and how to use them safely.", buildTogether: "LET’S BUILD SOMETHING", buildTitle: "Make your idea a plugin", buildDescription: "Open the developer guide. Start with one useful capability.",
     footerNote: "More possibilities. The same care for security.", catalogApi: "Catalog API", detailNote: "Check the plugin documentation for supported CheeseSec products, compatible versions, and installation steps.", viewDocs: "Read the documentation",
     searchPlaceholder: "Search plugin names or publishers", searchLabel: "Search plugins", clearSearch: "Clear search", themeLight: "Use light theme", themeDark: "Use dark theme", closeDialog: "Close plugin details", homeLabel: "CheeseSec home", navigation: "Main navigation", detailsLabel: "View plugin details", version: "Version", publisher: "Publisher", packageSize: "Package size", releaseSequence: "Release sequence", digest: "SHA-256 digest",
+    planned: "Planned", plannedNote: "This planned pack publishes a descriptor only. It is implemented by the host and cannot be installed yet.", notInstallable: "Not installable yet", extensionType: "Extension type", planStatus: "Status", descriptorDigest: "Descriptor SHA-256", descriptorReference: "Descriptor URL", extensionNotifier: "Notifier provider", extensionStorage: "Storage provider", extensionDescriptor: "Extension descriptor",
     trustOfficial: "Official", trustEnterprise: "Enterprise", trustCommunity: "Community", trustPersonal: "Personal", trustTest: "Test", trustDevelopment: "Development",
     lifecycleDescription: "Lifecycle example. No protection capabilities.", lifecycleDetails: "This example only checks startup, health, and shutdown. It does not detect attacks or collect data.", compatibility: "Supported platform", platformLinux: "Linux amd64 only.", platformMac: "macOS arm64 (Apple silicon) only.", downloadPackage: "Download .crp package", verificationGuide: "Signature verification", compatibilityGuide: "Compatibility & installation",
   },
@@ -31,6 +33,8 @@ const copy = {
 
 const categoryKeys = { all: "categoryAll", security: "categorySecurity", intelligence: "categoryIntelligence", notifications: "categoryNotifications", analysis: "categoryAnalysis", tools: "categoryTools" };
 const categoryIcons = { security: "shield", intelligence: "radar", notifications: "bell", analysis: "chart", tools: "code" };
+const extensionTypeKeys = { "notifier-provider": "extensionNotifier", "storage-provider": "extensionStorage", "extension-descriptor": "extensionDescriptor" };
+const extensionIcons = { "notifier-provider": "bell", "storage-provider": "chart", "extension-descriptor": "puzzle" };
 const trustKeys = { official: "trustOfficial", enterprise: "trustEnterprise", community: "trustCommunity", personal: "trustPersonal", test: "trustTest", development: "trustDevelopment" };
 const byId = id => document.getElementById(id);
 const readPreference = key => { try { return localStorage.getItem(key); } catch { return null; } };
@@ -39,7 +43,7 @@ const preferredLanguage = readPreference("cheesesec-store-language");
 const state = {
   language: preferredLanguage === "zh" || preferredLanguage === "en" ? preferredLanguage : navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en",
   theme: readPreference("cheesesec-store-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
-  category: "all", query: "", sort: "newest", plugins: [], status: "loading", currentPlugin: null,
+  category: "all", query: "", sort: "newest", items: [], status: "loading", currentPlugin: null,
 };
 if (!["light", "dark"].includes(state.theme)) state.theme = "light";
 const t = key => copy[state.language][key] || key;
@@ -100,17 +104,28 @@ function makeElement(tag, className, text) {
 }
 
 function renderCard(plugin) {
-  const card = makeElement("button", "plugin-card");
+  // Planned packs render as cards so the roadmap is visible, but they carry no
+  // download affordance: the card only opens the read-only detail dialog.
+  const planned = plugin.planned === true;
+  const card = makeElement("button", planned ? "plugin-card planned-card" : "plugin-card");
   card.type = "button";
-  card.setAttribute("aria-label", `${t("detailsLabel")}: ${plugin.name}`);
+  card.setAttribute("aria-label", `${t("detailsLabel")}: ${plugin.name}${planned ? ` · ${t("planned")}` : ""}`);
   const top = makeElement("div", "plugin-card-top");
-  const glyph = makeElement("span", "plugin-card-icon");
-  glyph.append(icon(plugin.lifecycleExample ? "puzzle" : categoryIcons[plugin.category] || "puzzle"));
-  top.append(glyph, makeElement("span", "trust-chip", t(trustKeys[plugin.trustLevel] || "trustCommunity")));
+  const glyph = makeElement("span", planned ? "plugin-card-icon planned-icon" : "plugin-card-icon");
+  glyph.append(icon(planned
+    ? extensionIcons[plugin.extensionType] || "puzzle"
+    : plugin.lifecycleExample ? "puzzle" : categoryIcons[plugin.category] || "puzzle"));
+  top.append(glyph, planned
+    ? makeElement("span", "planned-chip", t("planned"))
+    : makeElement("span", "trust-chip", t(trustKeys[plugin.trustLevel] || "trustCommunity")));
   const bottom = makeElement("div", "plugin-card-bottom");
-  bottom.append(makeElement("span", "plugin-card-version", `v${plugin.version}`), icon("arrow"));
+  bottom.append(makeElement("span", "plugin-card-version", `v${plugin.version}`),
+    planned ? makeElement("span", "planned-note", t("notInstallable")) : icon("arrow"));
   card.append(top, makeElement("h3", "", plugin.name));
-  if (plugin.lifecycleExample) {
+  if (planned) {
+    card.append(makeElement("span", "platform-chip", t(extensionTypeKeys[plugin.extensionType] || "extensionDescriptor")));
+    card.append(makeElement("p", "plugin-purpose", plugin.summary));
+  } else if (plugin.lifecycleExample) {
     card.append(makeElement("span", "platform-chip", plugin.lifecycleExample.platformLabel));
     card.append(makeElement("p", "plugin-purpose", t("lifecycleDescription")));
   } else card.append(makeElement("p", "", t(categoryKeys[plugin.category] || "categoryTools")));
@@ -141,7 +156,7 @@ function setCatalogState(kind) {
 
 function render() {
   const grid = byId("plugin-grid");
-  const filtered = filterCatalog(state.plugins, { query: state.query, category: state.category, sort: state.sort });
+  const filtered = filterCatalog(state.items, { query: state.query, category: state.category, sort: state.sort });
   byId("catalog-title").textContent = t(categoryKeys[state.category]);
   byId("result-count").textContent = state.status === "loading" ? "—" : String(filtered.length);
   byId("clear-search").hidden = state.query.length === 0;
@@ -154,31 +169,52 @@ function render() {
   byId("catalog").setAttribute("aria-busy", String(state.status === "loading"));
   if (state.status === "loading") { setCatalogState("loading"); return; }
   if (state.status === "error") { setCatalogState("error"); return; }
-  if (state.plugins.length === 0) { setCatalogState("empty"); return; }
+  if (state.items.length === 0) { setCatalogState("empty"); return; }
   if (filtered.length === 0) { setCatalogState("noResults"); return; }
   setCatalogState("results");
   filtered.forEach(plugin => grid.append(renderCard(plugin)));
 }
 
 function fillDetails(plugin) {
+  const planned = plugin.planned === true;
   byId("detail-title").textContent = plugin.name;
   byId("detail-namespace").textContent = plugin.namespace;
-  byId("detail-trust").textContent = t(trustKeys[plugin.trustLevel] || "trustCommunity");
-  const fields = [["version", plugin.version], ["publisher", plugin.source], ["packageSize", formatSize(plugin.size)], ["releaseSequence", String(plugin.releaseSequence)], ["digest", plugin.sha256]];
-  if (plugin.lifecycleExample) fields.unshift(["compatibility", plugin.lifecycleExample.platformLabel]);
+  byId("detail-trust").textContent = planned
+    ? `${t("planned")} · ${t(trustKeys[plugin.trustLevel] || "trustCommunity")}`
+    : t(trustKeys[plugin.trustLevel] || "trustCommunity");
+  const fields = planned
+    ? [["extensionType", t(extensionTypeKeys[plugin.extensionType] || "extensionDescriptor")], ["version", plugin.version], ["planStatus", t("planned")], ["descriptorDigest", plugin.descriptorSha256], ["descriptorReference", plugin.descriptorUrl]]
+    : [["version", plugin.version], ["publisher", plugin.source], ["packageSize", formatSize(plugin.size)], ["releaseSequence", String(plugin.releaseSequence)], ["digest", plugin.sha256]];
+  if (!planned && plugin.lifecycleExample) fields.unshift(["compatibility", plugin.lifecycleExample.platformLabel]);
   const metadata = byId("detail-metadata");
   metadata.replaceChildren();
   fields.forEach(([label, value]) => { metadata.append(makeElement("dt", "", t(label)), makeElement("dd", "", value)); });
   const lifecycle = byId("detail-lifecycle");
-  lifecycle.hidden = !plugin.lifecycleExample;
+  lifecycle.classList.toggle("detail-planned", planned);
+  lifecycle.hidden = !planned && !plugin.lifecycleExample;
   lifecycle.replaceChildren();
-  if (plugin.lifecycleExample) {
+  if (planned) {
+    lifecycle.append(makeElement("strong", "", t("planned")), makeElement("p", "", t("plannedNote")));
+  } else if (plugin.lifecycleExample) {
     lifecycle.append(makeElement("strong", "", t("lifecycleDescription")), makeElement("p", "", t("lifecycleDetails")), makeElement("p", "detail-platform", t(plugin.lifecycleExample.platform === "linux-amd64" ? "platformLinux" : "platformMac")));
   }
+  // The install-oriented note only applies to published releases.
+  const note = document.querySelector(".detail-note");
+  if (note) note.hidden = planned;
   const download = byId("detail-download");
-  download.href = plugin.downloadUrl;
-  download.setAttribute("download", plugin.downloadUrl.split("/").at(-1));
-  download.setAttribute("aria-label", `${t("downloadPackage")}: ${plugin.name}${plugin.lifecycleExample ? ` · ${plugin.lifecycleExample.platformLabel}` : ""}`);
+  if (planned) {
+    // A planned pack has no archive, so the download control is removed rather
+    // than left pointing at a descriptor or an empty href.
+    download.hidden = true;
+    download.removeAttribute("href");
+    download.removeAttribute("download");
+    download.setAttribute("aria-label", t("notInstallable"));
+  } else {
+    download.hidden = false;
+    download.href = plugin.downloadUrl;
+    download.setAttribute("download", plugin.downloadUrl.split("/").at(-1));
+    download.setAttribute("aria-label", `${t("downloadPackage")}: ${plugin.name}${plugin.lifecycleExample ? ` · ${plugin.lifecycleExample.platformLabel}` : ""}`);
+  }
 }
 
 function formatSize(value) {
@@ -199,14 +235,16 @@ async function loadCatalog() {
     if (!response.ok || !response.headers.get("content-type")?.toLowerCase().includes("application/json")) throw new Error("catalog unavailable");
     const text = await response.text();
     if (new TextEncoder().encode(text).byteLength > 1024 * 1024) throw new Error("catalog too large");
-    const { plugins } = normalizeCatalog(JSON.parse(text));
+    // Published releases and planned packs share one display list; each item
+    // keeps its own projection so planned entries never gain a download URL.
+    const { plugins, extensions } = normalizeCatalog(JSON.parse(text));
     if (version !== requestVersion) return;
-    state.plugins = plugins;
+    state.items = [...plugins, ...extensions];
     state.status = "ready";
   } catch {
     if (version !== requestVersion) return;
     state.status = "error";
-    state.plugins = [];
+    state.items = [];
   }
   render();
 }

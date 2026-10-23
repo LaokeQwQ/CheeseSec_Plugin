@@ -1,0 +1,29 @@
+{
+  "api_version": "crp.cheesewaf.io/notifier/v1",
+  "provider_id": "official-dingtalk-bot-1.0.0",
+  "type": "dingtalk",
+  "version": "1.0.0",
+  "namespace": "official/notifier-dingtalk",
+  "source": "future-contract",
+  "source_root": "vendor-root-v1",
+  "config_schema": {
+    "dialect": "cheesewaf-notifier-config/v1",
+    "fields": [
+      { "name": "target_name", "kind": "string", "required": false, "max_length": 128 },
+      { "name": "at_mobiles", "kind": "string", "required": false, "max_length": 512 },
+      { "name": "msg_type", "kind": "enum", "required": false }
+    ]
+  },
+  "secret_fields": ["webhook_ref", "sign_secret_ref"],
+  "endpoint_templates": [
+    {
+      "name": "notify",
+      "url_template": "https://oapi.dingtalk.com/robot/send?access_token={webhook_ref}",
+      "method": "POST",
+      "egress_owner": "cheesewaf-core",
+      "variables": ["webhook_ref"]
+    }
+  ],
+  "capabilities": ["alert_delivery", "test_delivery"],
+  "publication": { "status": "planned", "installable": false, "crp_binding": "descriptor-only" }
+}

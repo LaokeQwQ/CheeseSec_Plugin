@@ -73,6 +73,10 @@ def build(args):
     output = Path(args.output)
     if output.exists():
         raise ValueError("output must not already exist")
+    artifact_path = Path(args.artifact)
+    blocked_segments = {"fuzz", "fuzzing", "corpus", "testdata", "crash", "crashes"}
+    if any(segment.lower() in blocked_segments for segment in artifact_path.parts):
+        raise ValueError("fuzz test cases and corpora must never be published")
     artifact = read_file(args.artifact)
     name = Path(args.artifact).name
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,254}", name):

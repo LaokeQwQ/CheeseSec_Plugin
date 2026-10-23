@@ -9,9 +9,33 @@
     "api_version": { "const": "store.cheesesec.com/v1" },
     "catalog_sequence": { "type": "integer", "minimum": 0 },
     "releases": { "type": "array", "items": { "$ref": "release.schema.json" }, "uniqueItems": true },
-    "withdrawals": { "type": "array", "items": { "$ref": "#/$defs/withdrawal" }, "uniqueItems": true }
+    "withdrawals": { "type": "array", "items": { "$ref": "#/$defs/withdrawal" }, "uniqueItems": true },
+    "extensions": { "type": "array", "items": { "$ref": "#/$defs/extension" }, "uniqueItems": true, "maxItems": 10000 }
   },
   "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "plugin_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$" },
+    "namespace": { "type": "string", "pattern": "^(official/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}|(enterprise|community|personal|test|development)/[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,63})$" },
+    "version": { "type": "string", "pattern": "^[0-9]+([.][0-9]+){0,2}([-][0-9A-Za-z.-]+)?([+][0-9A-Za-z.-]+)?$" },
+    "extension": {
+      "description": "A planned extension or provider pack. It is descriptor-only: never installable, never a CRP download.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extension_id", "plugin_id", "namespace", "type", "version", "status", "installable", "title", "summary", "descriptor_sha256", "descriptor_url"],
+      "properties": {
+        "extension_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+        "plugin_id": { "$ref": "#/$defs/plugin_id" },
+        "namespace": { "$ref": "#/$defs/namespace" },
+        "type": { "enum": ["notifier-provider", "storage-provider", "extension-descriptor"] },
+        "version": { "$ref": "#/$defs/version" },
+        "status": { "const": "planned" },
+        "installable": { "const": false },
+        "title": { "type": "string", "minLength": 1, "maxLength": 96, "pattern": "^(?=[^\\u0000-\\u001f\\u007f]+$)(?!\\s)(?:.*\\S)$" },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 280, "pattern": "^(?=[^\\u0000-\\u001f\\u007f]+$)(?!\\s)(?:.*\\S)$" },
+        "descriptor_sha256": { "$ref": "#/$defs/sha256" },
+        "descriptor_url": { "type": "string", "pattern": "^https://res[.]cheesesec[.]com/sha256/[0-9a-f]{64}/[A-Za-z0-9][A-Za-z0-9._+-]{0,249}[.]json$" }
+      }
+    },
     "withdrawal": {
       "type": "object",
       "additionalProperties": false,

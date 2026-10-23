@@ -121,6 +121,40 @@ test("ordinary browsers receive a store page while v1 remains a separate JSON re
   }
 });
 
+test("the served storefront ships planned packs as non-installable cards", async () => {
+  const { env } = fixture();
+  const asset = await worker.fetch(new Request("https://store.cheesesec.com/catalog.mjs"), env);
+  assert.equal(asset.status, 200);
+  assert.match(asset.headers.get("content-type"), /^text\/javascript/);
+  const catalogModule = await import(`data:text/javascript;base64,${Buffer.from(await asset.text()).toString("base64")}`);
+  const digest = "a".repeat(64);
+  const pack = {
+    extension_id: "official-wecom-bot-1.0.0", plugin_id: "wecom-notifier", namespace: "official/wecom-notifier",
+    type: "notifier-provider", version: "1.0.0", status: "planned", installable: false,
+    title: "WeCom bot", summary: "Planned WeCom destination pack.",
+    descriptor_sha256: digest, descriptor_url: `https://res.cheesesec.com/sha256/${digest}/wecom-notifier.json`,
+  };
+  const catalogWith = (...extensions) => ({
+    api_version: "store.cheesesec.com/v1", catalog_sequence: 3, releases: [], withdrawals: [], extensions,
+  });
+  const { plugins, extensions } = catalogModule.normalizeCatalog(catalogWith(pack));
+  assert.deepEqual(plugins, []);
+  assert.equal(extensions.length, 1);
+  assert.equal(extensions[0].planned, true);
+  assert.equal(extensions[0].installable, false);
+  assert.equal(extensions[0].downloadUrl, null);
+  assert.equal(extensions[0].descriptorUrl, pack.descriptor_url);
+  for (const mutation of [{ status: "published" }, { installable: true }, { type: "crp-archive" }, { descriptor_url: `${pack.descriptor_url}?download=1` }]) {
+    assert.throws(() => catalogModule.normalizeCatalog(catalogWith({ ...pack, ...mutation })), /Invalid/, JSON.stringify(mutation));
+  }
+  const script = await worker.fetch(new Request("https://store.cheesesec.com/storefront.js"), env);
+  assert.equal(script.status, 200);
+  assert.match(await script.text(), /planned-card/);
+  const styles = await worker.fetch(new Request("https://store.cheesesec.com/storefront.css"), env);
+  assert.equal(styles.status, 200);
+  assert.match(await styles.text(), /\.planned-card\{/);
+});
+
 test("website, local, API and console hosts have no assets or management proxy in this service", async () => {
   for (const path of ["cheesesec.com/", "www.cheesesec.com/api/health", "docs.cheesesec.com/", "localhost/", "api.cheesesec.com/api/sites", "console.cheesesec.com/setup"]) {
     const { env, calls } = fixture();

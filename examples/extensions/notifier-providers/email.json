@@ -1,0 +1,24 @@
+{
+  "api_version": "crp.cheesewaf.io/notifier/v1",
+  "provider_id": "official-email-smtp-1.0.0",
+  "type": "email",
+  "version": "1.0.0",
+  "namespace": "official/notifier-email",
+  "source": "future-contract",
+  "source_root": "vendor-root-v1",
+  "config_schema": {
+    "dialect": "cheesewaf-notifier-config/v1",
+    "fields": [
+      { "name": "smtp_host", "kind": "endpoint", "required": true, "max_length": 255 },
+      { "name": "smtp_port", "kind": "string", "required": true, "max_length": 5 },
+      { "name": "from", "kind": "recipient", "required": true, "max_length": 320 },
+      { "name": "to", "kind": "recipient", "required": true, "max_length": 320 },
+      { "name": "tls_mode", "kind": "enum", "required": false },
+      { "name": "subject_prefix", "kind": "string", "required": false, "max_length": 128 }
+    ]
+  },
+  "secret_fields": ["password_ref"],
+  "endpoint_templates": [],
+  "capabilities": ["alert_delivery", "test_delivery"],
+  "publication": { "status": "planned", "installable": false, "crp_binding": "descriptor-only" }
+}
