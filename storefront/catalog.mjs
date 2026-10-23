@@ -117,9 +117,13 @@ function projectRelease(record) {
 
 function projectExtension(record) {
   if (!object(record)) throw new Error("Invalid catalog extension");
-  // Planned packs are descriptor-only by contract: no other status and no
-  // truthy installability may ever reach a storefront card.
-  if (record.status !== "planned" || record.installable !== false || !EXTENSION_TYPES.has(record.type)) {
+  // A planned pack is descriptor-only and never installable. An available
+  // pack is built into the core (`install_mode: "builtin"`); it still has no
+  // downloadable archive, so it can never masquerade as a CRP release.
+  const available = record.status === "available";
+  if (!["planned", "available"].includes(record.status)
+    || !EXTENSION_TYPES.has(record.type)
+    || (available ? record.installable !== true || record.install_mode !== "builtin" : record.installable !== false)) {
     throw new Error("Invalid catalog extension");
   }
   if (!boundedString(record.extension_id, 128) || !EXTENSION_ID.test(record.extension_id)
@@ -136,8 +140,10 @@ function projectExtension(record) {
   return {
     id: record.extension_id,
     kind: "extension",
-    planned: true,
-    installable: false,
+    planned: !available,
+    available,
+    installable: available,
+    installMode: available ? "builtin" : "descriptor",
     extensionType: record.type,
     namespace: record.namespace,
     name: record.title,

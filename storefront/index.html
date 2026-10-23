@@ -71,6 +71,7 @@
           <button class="category-button" type="button" data-category="notifications" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-bell"/></svg><span data-i18n="categoryNotifications">通知与集成</span></button>
           <button class="category-button" type="button" data-category="analysis" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-chart"/></svg><span data-i18n="categoryAnalysis">分析与审计</span></button>
           <button class="category-button" type="button" data-category="tools" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-code"/></svg><span data-i18n="categoryTools">开发工具</span></button>
+          <button class="category-button" type="button" data-category="examples" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-puzzle"/></svg><span data-i18n="categoryExamples">示例插件</span></button>
         </nav>
         <div class="sidebar-note"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><p data-i18n="sidebarNote">有一个好想法？<br>从开发你的第一个插件开始。</p><a class="docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/"><span data-i18n="developerGuide">开发指南</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a></div>
       </aside>
@@ -85,6 +86,13 @@
         </div>
         <div class="catalog-heading"><div><h2 id="catalog-title" data-i18n="categoryAll">全部插件</h2><span id="result-count" class="result-count" aria-live="polite">—</span></div><span id="catalog-caption" class="catalog-caption" data-i18n="catalogCaption">适合你的下一份能力</span></div>
         <div id="plugin-grid" class="plugin-grid"></div>
+        <section id="example-section" class="example-section" hidden>
+          <div class="example-heading">
+            <div><span class="example-kicker" data-i18n="examplesKicker">示例</span><h2 data-i18n="examplesTitle">示例插件</h2></div>
+            <p data-i18n="examplesDescription">用于验证插件生命周期、启动、健康检查与停止流程，不提供实际防护能力。</p>
+          </div>
+          <div id="example-grid" class="plugin-grid"></div>
+        </section>
         <section id="catalog-state" class="catalog-state" aria-live="polite" aria-atomic="true">
           <div class="state-art"><svg id="state-icon" class="icon" aria-hidden="true"><use href="#icon-puzzle"/></svg><span class="state-art-dot dot-one"></span><span class="state-art-dot dot-two"></span></div>
           <h3 id="state-title" data-i18n="loadingTitle">正在查看插件目录</h3>

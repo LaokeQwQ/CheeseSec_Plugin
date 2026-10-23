@@ -265,9 +265,10 @@ test("catalog schema keeps the planned extension contract optional and strict", 
   assert.equal(item.additionalProperties, false);
   assert.deepEqual(item.required, ["extension_id", "plugin_id", "namespace", "type", "version", "status", "installable", "title", "summary", "descriptor_sha256", "descriptor_url"]);
   assert.deepEqual(item.properties.type.enum, ["notifier-provider", "storage-provider", "extension-descriptor"]);
-  assert.equal(item.properties.status.const, "planned");
-  assert.equal(item.properties.installable.const, false);
-  assert.equal(Object.keys(item.properties).length, item.required.length);
+  assert.deepEqual(item.properties.status.enum, ["planned", "available"]);
+  assert.equal(item.properties.installable.type, "boolean");
+  assert.deepEqual(item.properties.install_mode.enum, ["descriptor", "builtin"]);
+  assert.ok(Object.keys(item.properties).length >= item.required.length);
   for (const [field, value] of Object.entries(extension())) {
     const rule = item.properties[field];
     assert.ok(rule, `${field} is declared`);

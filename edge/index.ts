@@ -20,3 +20,12 @@ export default {
     }
   },
 };
+
+// The deployed publication Worker historically exported this Durable Object
+// class. Keep the export so a storefront-only deployment does not delete an
+// existing namespace; the public read path never binds or calls it.
+export class ServiceCounters {
+  async fetch(): Promise<Response> {
+    return new Response("", { status: 404 });
+  }
+}
