@@ -279,3 +279,27 @@ test("catalog schema keeps the planned extension contract optional and strict", 
   assert.doesNotMatch(" Feishu bot", new RegExp(item.properties.title.pattern));
   assert.doesNotMatch("Feishu bot ", new RegExp(item.properties.title.pattern));
 });
+
+test("built-in extensions project as available without becoming a download", () => {
+  const record = extension({ status: "available", installable: true, install_mode: "builtin", plugin_id: "notifier-datadog" });
+  const { extensions } = normalizeCatalog(catalog([], [], [record]));
+  assert.equal(extensions.length, 1);
+  const [item] = extensions;
+  assert.equal(item.available, true);
+  assert.equal(item.planned, false);
+  assert.equal(item.installable, true);
+  assert.equal(item.installMode, "builtin");
+  assert.equal(item.downloadUrl, null);
+  assert.equal(item.sha256, null);
+});
+
+test("example releases are categorized separately and sort last", () => {
+  const exampleRelease = release("hello-cheesesec-linux-amd64", 1, { version: "0.1.0", release_id: "official/hello-cheesesec-linux-amd64@0.1.0#1" });
+  const { plugins } = normalizeCatalog(catalog([exampleRelease, release("ordinary", 2)]));
+  const ordinary = plugins.find(plugin => plugin.pluginId === "ordinary");
+  const example = plugins.find(plugin => plugin.lifecycleExample);
+  assert.ok(ordinary);
+  assert.ok(example);
+  assert.equal(example.category, "examples");
+  assert.equal(filterCatalog(plugins, { category: "examples" }).length, 1);
+});

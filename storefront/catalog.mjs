@@ -104,7 +104,7 @@ function projectRelease(record) {
     pluginId: record.plugin_id,
     version: record.version,
     trustLevel: record.trust_level,
-    category: categoryForRelease(record),
+    category: lifecycleExample ? "examples" : categoryForRelease(record),
     releaseSequence: record.release_sequence,
     sha256: record.crp.digests.sha256,
     size: record.crp.size,
