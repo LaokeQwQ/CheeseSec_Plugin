@@ -22,7 +22,20 @@
   "properties": {
     "api_version": { "const": "crp.cheesewaf.io/notifier/v1" },
     "provider_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
-    "type": { "enum": ["webhook", "dingtalk", "feishu", "wecom", "telegram", "email"] },
+    "type": {
+      "enum": [
+        "webhook",
+        "dingtalk",
+        "feishu",
+        "wecom",
+        "telegram",
+        "email",
+        "datadog",
+        "grafana",
+        "flashcat",
+        "nightingale"
+      ]
+    },
     "version": { "$ref": "#/$defs/version" },
     "namespace": { "$ref": "#/$defs/namespace" },
     "source": { "$ref": "#/$defs/identifier" },

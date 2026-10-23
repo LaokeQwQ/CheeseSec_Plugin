@@ -1,0 +1,13 @@
+{
+  "api_version": "crp.cheesewaf.io/connector/v1",
+  "connector_id": "official-aws-s3-connector-1.0.0",
+  "provider": "aws-s3",
+  "version": "1.0.0",
+  "namespace": "official/aws-s3-connector",
+  "services": ["object-storage"],
+  "protocols": {"object-storage": ["s3"]},
+  "status": "planned",
+  "installable": false,
+  "secret_fields": ["access_key_ref", "secret_key_ref", "session_token_ref"],
+  "publication": {"status": "planned", "installable": false, "crp_binding": "descriptor-only"}
+}

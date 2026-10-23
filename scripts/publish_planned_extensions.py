@@ -29,9 +29,19 @@ _REGISTRY = Registry().with_resource(_RELEASE["$id"], Resource.from_contents(_RE
 # provider_id in the pack is the signed descriptor identity; the catalog
 # plugin_id is the shorter storefront identity.
 PACKS = {
-    "dingtalk.json": ("notifier-dingtalk", "DingTalk notifications", "DingTalk custom robot provider pack. Core-owned delivery; no plugin egress."),
-    "feishu.json": ("notifier-feishu", "Feishu notifications", "Feishu custom bot provider pack. Core-owned delivery; no plugin egress."),
-    "email.json": ("notifier-email", "Email notifications", "SMTP email provider pack. Core-owned delivery; no plugin egress."),
+    "notifier-providers/dingtalk.json": ("notifier-dingtalk", "notifier-provider", "DingTalk notifications", "DingTalk custom robot provider pack. Core-owned delivery; no plugin egress."),
+    "notifier-providers/feishu.json": ("notifier-feishu", "notifier-provider", "Feishu notifications", "Feishu custom bot provider pack. Core-owned delivery; no plugin egress."),
+    "notifier-providers/email.json": ("notifier-email", "notifier-provider", "Email notifications", "SMTP email provider pack. Core-owned delivery; no plugin egress."),
+    "notifier-providers/datadog.json": ("notifier-datadog", "notifier-provider", "Datadog events", "Datadog Events API provider pack. API key stays in the core secret store."),
+    "notifier-providers/grafana.json": ("notifier-grafana", "notifier-provider", "Grafana annotations", "Grafana annotation provider pack. Bearer token stays in the core secret store."),
+    "notifier-providers/flashcat.json": ("notifier-flashcat", "notifier-provider", "Flashcat alerts", "Flashcat/Flashduty event provider pack. Destination and credentials are core-owned."),
+    "notifier-providers/nightingale.json": ("notifier-nightingale", "notifier-provider", "Nightingale alerts", "Nightingale callback provider pack. Destination and credentials are core-owned."),
+    "observability/clickhouse.json": ("clickhouse-log-sink", "extension-descriptor", "ClickHouse log sink", "ClickHouse log and query sink descriptor. Host-owned connection and credentials."),
+    "observability/loki.json": ("loki-log-sink", "extension-descriptor", "Loki log sink", "Grafana Loki push/query sink descriptor. Host-owned connection and credentials."),
+    "cloud-connectors/aliyun.json": ("aliyun-connector", "extension-descriptor", "Alibaba Cloud connector", "Alibaba Cloud DNS, certificate and OSS connector descriptor. Credentials stay in the core secret store."),
+    "cloud-connectors/tencent.json": ("tencent-connector", "extension-descriptor", "Tencent Cloud connector", "Tencent Cloud DNSPod, certificate and COS connector descriptor. Credentials stay in the core secret store."),
+    "cloud-connectors/dogecloud.json": ("dogecloud-connector", "extension-descriptor", "DogeCloud connector", "DogeCloud CDN and S3-compatible bucket connector descriptor. Credentials stay in the core secret store."),
+    "cloud-connectors/aws-s3.json": ("aws-s3-connector", "extension-descriptor", "AWS S3 connector", "S3-compatible object storage connector descriptor for AWS S3 and compatible endpoints."),
 }
 
 
@@ -53,7 +63,7 @@ def validate(value: object, label: str) -> None:
 def extension_records(directory: Path) -> tuple[list[dict], list[tuple[str, bytes]]]:
     records = []
     objects = []
-    for filename, (plugin_id, title, summary) in PACKS.items():
+    for filename, (plugin_id, extension_type, title, summary) in PACKS.items():
         path = directory / filename
         data = path.read_bytes()
         sha = digest(data)
@@ -62,7 +72,7 @@ def extension_records(directory: Path) -> tuple[list[dict], list[tuple[str, byte
             "extension_id": f"official-{plugin_id}-1.0.0",
             "plugin_id": plugin_id,
             "namespace": f"official/{plugin_id}",
-            "type": "notifier-provider",
+            "type": extension_type,
             "version": "1.0.0",
             "status": "planned",
             "installable": False,
@@ -107,7 +117,7 @@ def get(bucket: str, key: str, wrangler_bin: str) -> bytes:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--catalog", required=True, help="current live catalog snapshot")
-    parser.add_argument("--extension-dir", default=str(ROOT / "examples/extensions/notifier-providers"))
+    parser.add_argument("--extension-dir", default=str(ROOT / "examples/extensions"))
     parser.add_argument("--index-bucket", default="cheesesec-publication-index-prod")
     parser.add_argument("--resources-bucket", default="cheesesec-public-resources-prod")
     parser.add_argument("--wrangler", default=str(ROOT / "edge/node_modules/.bin/wrangler"))

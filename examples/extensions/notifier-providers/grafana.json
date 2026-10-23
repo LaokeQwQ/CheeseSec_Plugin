@@ -1,0 +1,30 @@
+{
+  "api_version": "crp.cheesewaf.io/notifier/v1",
+  "provider_id": "official-grafana-alertmanager-1.0.0",
+  "type": "grafana",
+  "version": "1.0.0",
+  "namespace": "official/notifier-grafana",
+  "source": "future-contract",
+  "source_root": "vendor-root-v1",
+  "config_schema": {
+    "dialect": "cheesewaf-notifier-config/v1",
+    "fields": [
+      { "name": "grafana_host", "kind": "endpoint", "required": true, "max_length": 255 },
+      { "name": "tls_mode", "kind": "enum", "required": false },
+      { "name": "labels", "kind": "string", "required": false, "max_length": 512 },
+      { "name": "annotations", "kind": "string", "required": false, "max_length": 512 }
+    ]
+  },
+  "secret_fields": ["basic_auth_ref"],
+  "endpoint_templates": [
+    {
+      "name": "notify",
+      "url_template": "https://{grafana_host}/api/alertmanager/grafana/api/v2/alerts",
+      "method": "POST",
+      "egress_owner": "cheesewaf-core",
+      "variables": ["grafana_host"]
+    }
+  ],
+  "capabilities": ["alert_delivery", "test_delivery"],
+  "publication": { "status": "planned", "installable": false, "crp_binding": "descriptor-only" }
+}

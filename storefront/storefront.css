@@ -85,3 +85,12 @@
     .language-button,.header-actions .icon-button{min-height:44px;min-width:44px}
   }
 }
+
+.brand-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:15px;overflow:hidden;background:transparent}
+.brand-icon svg{width:34px;height:34px;display:block}
+.detail-icon .brand-icon{width:100%;height:100%;border-radius:0}
+.detail-icon .brand-icon svg{width:54px;height:54px}
+.detail-summary{margin:2px 0 0;color:var(--on-surface-variant);font-size:14px;line-height:1.9;max-width:640px}
+
+.sort-field>.sort-chevron{right:14px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;font-size:0;color:var(--on-surface-variant)}
+.sort-field>.sort-chevron .icon{width:18px;height:18px;stroke-width:2}

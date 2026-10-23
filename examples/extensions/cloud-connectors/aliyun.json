@@ -1,0 +1,13 @@
+{
+  "api_version": "crp.cheesewaf.io/connector/v1",
+  "connector_id": "official-aliyun-connector-1.0.0",
+  "provider": "aliyun",
+  "version": "1.0.0",
+  "namespace": "official/aliyun-connector",
+  "services": ["dns", "certificate", "object-storage"],
+  "protocols": {"dns": ["aliyun-dns"], "certificate": ["aliyun-cas"], "object-storage": ["oss"]},
+  "status": "planned",
+  "installable": false,
+  "secret_fields": ["access_key_ref", "secret_key_ref"],
+  "publication": {"status": "planned", "installable": false, "crp_binding": "descriptor-only"}
+}
