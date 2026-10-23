@@ -11,7 +11,7 @@ const copy = {
     gettingStarted: "从这里开始", guideTitle: "认识插件，找到更多可能", guideDescription: "使用说明、发布方式与安全边界，一处读懂。", buildTogether: "和我们一起创造", buildTitle: "把你的想法，变成一个插件", buildDescription: "阅读开发指南，从一个清晰的小能力开始。",
     footerNote: "让安全的能力，触手可及。", catalogApi: "目录 API", detailNote: "请在插件说明中确认适用的 CheeseSec 产品、兼容版本与安装方式。", viewDocs: "查看使用文档",
     searchPlaceholder: "搜索插件名称或发布者", searchLabel: "搜索插件", clearSearch: "清除搜索", themeLight: "切换浅色模式", themeDark: "切换深色模式", closeDialog: "关闭详情", homeLabel: "CheeseSec 首页", navigation: "主导航", detailsLabel: "查看插件详情", version: "版本", publisher: "发布者", packageSize: "资源大小", releaseSequence: "发布序号", digest: "SHA-256 摘要",
-    planned: "规划中", plannedNote: "规划中的扩展包只发布描述符，由宿主实现，当前不可安装。", notInstallable: "暂不可安装", extensionType: "扩展类型", planStatus: "状态", descriptorDigest: "描述符 SHA-256", descriptorReference: "描述符地址", extensionNotifier: "通知提供商", extensionStorage: "存储提供商", extensionDescriptor: "扩展描述符",
+    planned: "规划中", plannedNote: "规划中的扩展包只发布描述符，由宿主实现，当前不可安装。", notInstallable: "暂不可安装", extensionType: "扩展类型", planStatus: "状态", descriptorDigest: "描述符 SHA-256", descriptorReference: "描述符地址", extensionNotifier: "通知提供商", extensionStorage: "存储提供商", extensionDescriptor: "扩展描述符", extensionCloud: "云连接器", extensionObservability: "可观测性接入",
     trustOfficial: "官方", trustEnterprise: "企业", trustCommunity: "社区", trustPersonal: "个人", trustTest: "测试", trustDevelopment: "开发",
     lifecycleDescription: "生命周期示例，不提供防护能力。", lifecycleDetails: "这个示例仅用于验证启动、健康检查和停止流程，不检测攻击，也不采集数据。", compatibility: "适用平台", platformLinux: "仅支持 Linux amd64。", platformMac: "仅支持 macOS arm64（Apple 芯片）。", downloadPackage: "下载 .crp 包", verificationGuide: "签名校验说明", compatibilityGuide: "兼容性与安装说明",
   },
@@ -25,7 +25,7 @@ const copy = {
     gettingStarted: "A GOOD PLACE TO START", guideTitle: "Get to know plugins", guideDescription: "Learn how plugins work, how they are released, and how to use them safely.", buildTogether: "LET’S BUILD SOMETHING", buildTitle: "Make your idea a plugin", buildDescription: "Open the developer guide. Start with one useful capability.",
     footerNote: "More possibilities. The same care for security.", catalogApi: "Catalog API", detailNote: "Check the plugin documentation for supported CheeseSec products, compatible versions, and installation steps.", viewDocs: "Read the documentation",
     searchPlaceholder: "Search plugin names or publishers", searchLabel: "Search plugins", clearSearch: "Clear search", themeLight: "Use light theme", themeDark: "Use dark theme", closeDialog: "Close plugin details", homeLabel: "CheeseSec home", navigation: "Main navigation", detailsLabel: "View plugin details", version: "Version", publisher: "Publisher", packageSize: "Package size", releaseSequence: "Release sequence", digest: "SHA-256 digest",
-    planned: "Planned", plannedNote: "This planned pack publishes a descriptor only. It is implemented by the host and cannot be installed yet.", notInstallable: "Not installable yet", extensionType: "Extension type", planStatus: "Status", descriptorDigest: "Descriptor SHA-256", descriptorReference: "Descriptor URL", extensionNotifier: "Notifier provider", extensionStorage: "Storage provider", extensionDescriptor: "Extension descriptor",
+    planned: "Planned", plannedNote: "This planned pack publishes a descriptor only. It is implemented by the host and cannot be installed yet.", notInstallable: "Not installable yet", extensionType: "Extension type", planStatus: "Status", descriptorDigest: "Descriptor SHA-256", descriptorReference: "Descriptor URL", extensionNotifier: "Notifier provider", extensionStorage: "Storage provider", extensionDescriptor: "Extension descriptor", extensionCloud: "Cloud connector", extensionObservability: "Observability integration",
     trustOfficial: "Official", trustEnterprise: "Enterprise", trustCommunity: "Community", trustPersonal: "Personal", trustTest: "Test", trustDevelopment: "Development",
     lifecycleDescription: "Lifecycle example. No protection capabilities.", lifecycleDetails: "This example only checks startup, health, and shutdown. It does not detect attacks or collect data.", compatibility: "Supported platform", platformLinux: "Linux amd64 only.", platformMac: "macOS arm64 (Apple silicon) only.", downloadPackage: "Download .crp package", verificationGuide: "Signature verification", compatibilityGuide: "Compatibility & installation",
   },
@@ -99,6 +99,11 @@ function brandIcon(plugin) {
 const categoryKeys = { all: "categoryAll", security: "categorySecurity", intelligence: "categoryIntelligence", notifications: "categoryNotifications", analysis: "categoryAnalysis", tools: "categoryTools" };
 const categoryIcons = { security: "shield", intelligence: "radar", notifications: "bell", analysis: "chart", tools: "code" };
 const extensionTypeKeys = { "notifier-provider": "extensionNotifier", "storage-provider": "extensionStorage", "extension-descriptor": "extensionDescriptor" };
+function extensionTypeKey(plugin) {
+  if (plugin.extensionType === "extension-descriptor" && /-connector$/.test(plugin.pluginId)) return "extensionCloud";
+  if (plugin.extensionType === "extension-descriptor" && /(?:log-sink|observability)/.test(plugin.pluginId)) return "extensionObservability";
+  return extensionTypeKeys[plugin.extensionType] || "extensionDescriptor";
+}
 const extensionIcons = { "notifier-provider": "bell", "storage-provider": "chart", "extension-descriptor": "puzzle" };
 const trustKeys = { official: "trustOfficial", enterprise: "trustEnterprise", community: "trustCommunity", personal: "trustPersonal", test: "trustTest", development: "trustDevelopment" };
 const byId = id => document.getElementById(id);
@@ -191,7 +196,7 @@ function renderCard(plugin) {
     planned ? makeElement("span", "planned-note", t("notInstallable")) : icon("arrow"));
   card.append(top, makeElement("h3", "", view.name));
   if (planned) {
-    card.append(makeElement("span", "platform-chip", t(extensionTypeKeys[plugin.extensionType] || "extensionDescriptor")));
+    card.append(makeElement("span", "platform-chip", t(extensionTypeKey(plugin))));
     card.append(makeElement("p", "plugin-purpose", view.summary));
   } else if (plugin.lifecycleExample) {
     card.append(makeElement("span", "platform-chip", plugin.lifecycleExample.platformLabel));
@@ -260,7 +265,7 @@ function fillDetails(plugin) {
     ? `${t("planned")} · ${t(trustKeys[plugin.trustLevel] || "trustCommunity")}`
     : t(trustKeys[plugin.trustLevel] || "trustCommunity");
   const fields = planned
-    ? [["extensionType", t(extensionTypeKeys[plugin.extensionType] || "extensionDescriptor")], ["version", plugin.version], ["planStatus", t("planned")], ["descriptorDigest", plugin.descriptorSha256], ["descriptorReference", plugin.descriptorUrl]]
+    ? [["extensionType", t(extensionTypeKey(plugin))], ["version", plugin.version], ["planStatus", t("planned")], ["descriptorDigest", plugin.descriptorSha256], ["descriptorReference", plugin.descriptorUrl]]
     : [["version", plugin.version], ["publisher", plugin.source], ["packageSize", formatSize(plugin.size)], ["releaseSequence", String(plugin.releaseSequence)], ["digest", plugin.sha256]];
   if (!planned && plugin.lifecycleExample) fields.unshift(["compatibility", plugin.lifecycleExample.platformLabel]);
   const metadata = byId("detail-metadata");
