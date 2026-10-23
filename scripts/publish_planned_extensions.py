@@ -46,11 +46,15 @@ PACKS = {
 
 # These packs are backed by a core implementation today. The store marks them
 # available/builtin instead of pretending they are a downloadable CRP.
-AVAILABLE_PACKS = {
+BUILTIN_PACKS = {
     "notifier-dingtalk", "notifier-feishu", "notifier-email",
     "notifier-datadog", "notifier-grafana", "notifier-flashcat", "notifier-nightingale",
-    "clickhouse-log-sink",
+    "clickhouse-log-sink", "loki-log-sink",
 }
+DESCRIPTOR_PACKS = {
+    "aliyun-connector", "tencent-connector", "dogecloud-connector", "aws-s3-connector",
+}
+AVAILABLE_PACKS = BUILTIN_PACKS | DESCRIPTOR_PACKS
 
 
 def digest(data: bytes) -> str:
@@ -84,7 +88,7 @@ def extension_records(directory: Path) -> tuple[list[dict], list[tuple[str, byte
             "version": "1.0.0",
             "status": "available" if plugin_id in AVAILABLE_PACKS else "planned",
             "installable": plugin_id in AVAILABLE_PACKS,
-            "install_mode": "builtin" if plugin_id in AVAILABLE_PACKS else "descriptor",
+            "install_mode": ("builtin" if plugin_id in BUILTIN_PACKS else "descriptor") if plugin_id in AVAILABLE_PACKS else "descriptor",
             "title": title,
             "summary": summary,
             "descriptor_sha256": sha,

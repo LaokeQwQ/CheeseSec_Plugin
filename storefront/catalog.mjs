@@ -123,7 +123,7 @@ function projectExtension(record) {
   const available = record.status === "available";
   if (!["planned", "available"].includes(record.status)
     || !EXTENSION_TYPES.has(record.type)
-    || (available ? record.installable !== true || record.install_mode !== "builtin" : record.installable !== false)) {
+    || (available ? record.installable !== true || !["builtin", "descriptor"].includes(record.install_mode) : record.installable !== false)) {
     throw new Error("Invalid catalog extension");
   }
   if (!boundedString(record.extension_id, 128) || !EXTENSION_ID.test(record.extension_id)
@@ -143,7 +143,7 @@ function projectExtension(record) {
     planned: !available,
     available,
     installable: available,
-    installMode: available ? "builtin" : "descriptor",
+    installMode: available ? record.install_mode : "descriptor",
     extensionType: record.type,
     namespace: record.namespace,
     name: record.title,

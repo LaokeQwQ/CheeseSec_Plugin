@@ -303,3 +303,15 @@ test("example releases are categorized separately and sort last", () => {
   assert.equal(example.category, "examples");
   assert.equal(filterCatalog(plugins, { category: "examples" }).length, 1);
 });
+
+test("descriptor-available connectors keep install mode and expose only the descriptor", () => {
+  const record = extension({ status: "available", installable: true, install_mode: "descriptor", plugin_id: "aws-s3-connector", type: "extension-descriptor", namespace: "official/aws-s3-connector" });
+  const { extensions } = normalizeCatalog(catalog([], [], [record]));
+  assert.equal(extensions.length, 1);
+  const [item] = extensions;
+  assert.equal(item.available, true);
+  assert.equal(item.installable, true);
+  assert.equal(item.installMode, "descriptor");
+  assert.equal(item.downloadUrl, null);
+  assert.equal(item.descriptorUrl, item.raw.descriptor_url);
+});
