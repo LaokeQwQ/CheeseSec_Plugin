@@ -143,7 +143,8 @@ fixture 只用于契约校验，不代表线上消息总线或签名密钥已经
 安装：没有可执行文件、镜像、WASM 或网络栈，`endpoint_templates` 只允许 `https://`
 目标，且 `egress_owner` 固定为 `cheesewaf-core`。
 
-- 允许的类型是 `webhook`、`dingtalk`、`feishu`、`wecom`、`telegram` 和 `email`。
+- 允许的类型是 `webhook`、`dingtalk`、`feishu`、`wecom`、`telegram`、`email`、
+  `datadog`、`grafana`、`flashcat` 和 `nightingale`。
 - `secret_fields` 只写以 `_ref` 结尾的引用名，不写值；Token、Webhook 明文和密钥都由
   核心配置或秘密存储提供，不进入 pack。
 - 当前 sidecar descriptor 只允许 `observe`、`candidate_snapshot`、`hint`、`health`，
@@ -153,6 +154,10 @@ fixture 只用于契约校验，不代表线上消息总线或签名密钥已经
   `executable=false`、`runtime_capability_grant=false`。
 - `examples/extensions/notifier-provider.json` 是 Feishu 的契约样例，只用于字段和边界
   校验，不是可安装包，也不表示该 pack 已经可以加载或发布。
+- `examples/extensions/notifier-providers/` 保存 descriptor-only pack 样例：`dingtalk`、
+  `feishu`、`email`、`datadog`、`grafana`、`flashcat` 和 `nightingale`。自建实例类
+  （Grafana、Nightingale）用 `endpoint` 字段声明主机，云服务类（Datadog、Flashcat）
+  的模板固定厂商 `https://` 主机；凭据只以 `*_ref` 引用名出现。
 
 `scripts/validate_notifier_contracts.py` 校验 schema、策略和示例的一致性。provider pack 的
 运行时加载、秘密引用和投递审计不由本仓库交付，投递适配以 CheeseWAF 阶段验收为准。详见

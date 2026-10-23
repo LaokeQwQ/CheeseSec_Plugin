@@ -1,0 +1,14 @@
+{
+  "api_version": "crp.cheesewaf.io/observability/v1",
+  "provider_id": "official-clickhouse-log-sink-1.0.0",
+  "type": "clickhouse",
+  "version": "1.0.0",
+  "namespace": "official/clickhouse-log-sink",
+  "services": ["logs", "query"],
+  "transport": "https",
+  "status": "planned",
+  "installable": false,
+  "capabilities": ["log_sink", "query"],
+  "config_fields": ["endpoint", "database", "table", "username", "password_ref", "tls"],
+  "publication": {"status": "planned", "installable": false, "crp_binding": "descriptor-only"}
+}

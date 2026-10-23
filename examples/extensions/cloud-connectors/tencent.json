@@ -1,0 +1,13 @@
+{
+  "api_version": "crp.cheesewaf.io/connector/v1",
+  "connector_id": "official-tencent-connector-1.0.0",
+  "provider": "tencent",
+  "version": "1.0.0",
+  "namespace": "official/tencent-connector",
+  "services": ["dns", "certificate", "object-storage"],
+  "protocols": {"dns": ["dnspod"], "certificate": ["tencent-ssl"], "object-storage": ["cos"]},
+  "status": "planned",
+  "installable": false,
+  "secret_fields": ["secret_id_ref", "secret_key_ref"],
+  "publication": {"status": "planned", "installable": false, "crp_binding": "descriptor-only"}
+}

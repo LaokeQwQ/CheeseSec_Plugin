@@ -1,0 +1,30 @@
+{
+  "api_version": "crp.cheesewaf.io/notifier/v1",
+  "provider_id": "official-flashcat-flashduty-1.0.0",
+  "type": "flashcat",
+  "version": "1.0.0",
+  "namespace": "official/notifier-flashcat",
+  "source": "future-contract",
+  "source_root": "vendor-root-v1",
+  "config_schema": {
+    "dialect": "cheesewaf-notifier-config/v1",
+    "fields": [
+      { "name": "title_rule", "kind": "string", "required": true, "max_length": 512 },
+      { "name": "event_status", "kind": "enum", "required": true },
+      { "name": "alert_key", "kind": "string", "required": false, "max_length": 255 },
+      { "name": "labels", "kind": "string", "required": false, "max_length": 2048 }
+    ]
+  },
+  "secret_fields": ["integration_key_ref"],
+  "endpoint_templates": [
+    {
+      "name": "notify",
+      "url_template": "https://api.flashcat.cloud/event/push/alert/standard?integration_key={integration_key_ref}",
+      "method": "POST",
+      "egress_owner": "cheesewaf-core",
+      "variables": ["integration_key_ref"]
+    }
+  ],
+  "capabilities": ["alert_delivery", "test_delivery"],
+  "publication": { "status": "planned", "installable": false, "crp_binding": "descriptor-only" }
+}

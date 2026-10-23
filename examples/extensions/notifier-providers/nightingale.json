@@ -1,0 +1,30 @@
+{
+  "api_version": "crp.cheesewaf.io/notifier/v1",
+  "provider_id": "official-nightingale-pipeline-1.0.0",
+  "type": "nightingale",
+  "version": "1.0.0",
+  "namespace": "official/notifier-nightingale",
+  "source": "future-contract",
+  "source_root": "vendor-root-v1",
+  "config_schema": {
+    "dialect": "cheesewaf-notifier-config/v1",
+    "fields": [
+      { "name": "n9e_host", "kind": "endpoint", "required": true, "max_length": 255 },
+      { "name": "pipeline_id", "kind": "string", "required": true, "max_length": 64 },
+      { "name": "tls_mode", "kind": "enum", "required": false },
+      { "name": "event_status", "kind": "enum", "required": false }
+    ]
+  },
+  "secret_fields": ["basic_auth_ref"],
+  "endpoint_templates": [
+    {
+      "name": "notify",
+      "url_template": "https://{n9e_host}/v1/n9e/event-pipeline/{pipeline_id}/trigger",
+      "method": "POST",
+      "egress_owner": "cheesewaf-core",
+      "variables": ["n9e_host", "pipeline_id"]
+    }
+  ],
+  "capabilities": ["alert_delivery", "test_delivery"],
+  "publication": { "status": "planned", "installable": false, "crp_binding": "descriptor-only" }
+}

@@ -1,0 +1,14 @@
+{
+  "api_version": "crp.cheesewaf.io/observability/v1",
+  "provider_id": "official-loki-log-sink-1.0.0",
+  "type": "loki",
+  "version": "1.0.0",
+  "namespace": "official/loki-log-sink",
+  "services": ["logs", "query"],
+  "transport": "https",
+  "status": "planned",
+  "installable": false,
+  "capabilities": ["log_sink", "query"],
+  "config_fields": ["endpoint", "tenant_id", "username", "password_ref", "tls"],
+  "publication": {"status": "planned", "installable": false, "crp_binding": "descriptor-only"}
+}
