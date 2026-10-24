@@ -2,7 +2,7 @@ import { normalizeCatalog, filterCatalog } from "/catalog.mjs";
 
 const copy = {
   zh: {
-    skip: "跳到插件目录", store: "插件商店", explore: "发现插件", docs: "文档",
+    skip: "跳到插件目录", store: "插件商店", explore: "发现插件", docs: "文档", serviceStatus: "服务状态",
     heroTitle: "为每一种防护，\n找到合适的扩展。", heroDescription: "面向 CheeseSec 全生态的独立插件，在不同产品间扩展你的安全工具。",
     learnPlugins: "了解 CheeseSec 插件", categories: "分类", categoryAll: "全部插件", categorySecurity: "检测与防护", categoryIntelligence: "威胁情报", categoryNotifications: "通知与集成", categoryAnalysis: "分析与审计", categoryTools: "开发工具", categoryExamples: "示例插件", examplesKicker: "示例", examplesTitle: "示例插件", examplesDescription: "用于验证插件生命周期、启动、健康检查与停止流程，不提供实际防护能力。",
     sidebarNote: "有一个好想法？\n从开发你的第一个插件开始。", developerGuide: "开发指南", sortLabel: "排序方式", sortNewest: "最近发布", sortName: "名称排序", catalogCaption: "适合你的下一份能力",
@@ -16,7 +16,7 @@ const copy = {
     lifecycleDescription: "生命周期示例，不提供防护能力。", lifecycleDetails: "这个示例仅用于验证启动、健康检查和停止流程，不检测攻击，也不采集数据。", compatibility: "适用平台", platformLinux: "仅支持 Linux amd64。", platformMac: "仅支持 macOS arm64（Apple 芯片）。", downloadPackage: "下载 .crp 包", verificationGuide: "签名校验说明", compatibilityGuide: "兼容性与安装说明",
   },
   en: {
-    skip: "Skip to plugin catalog", store: "Plugin store", explore: "Explore", docs: "Documentation",
+    skip: "Skip to plugin catalog", store: "Plugin store", explore: "Explore", docs: "Documentation", serviceStatus: "Service status",
     heroTitle: "A little more power.\nA whole new possibility.", heroDescription: "Independent plugins for the CheeseSec ecosystem. Extend your security tools across products.",
     learnPlugins: "Meet CheeseSec plugins", categories: "CATEGORIES", categoryAll: "All plugins", categorySecurity: "Detection & protection", categoryIntelligence: "Threat intelligence", categoryNotifications: "Notifications & integrations", categoryAnalysis: "Analysis & audit", categoryTools: "Developer tools", categoryExamples: "Example plugins", examplesKicker: "EXAMPLES", examplesTitle: "Example plugins", examplesDescription: "Lifecycle examples that verify startup, health checks and shutdown. They do not provide protection capabilities.",
     sidebarNote: "Have an idea?\nStart with your first plugin.", developerGuide: "Developer guide", sortLabel: "Sort plugins", sortNewest: "Latest releases", sortName: "Name, A–Z", catalogCaption: "Find your next capability",
