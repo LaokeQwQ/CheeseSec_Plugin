@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { readFile } from "node:fs/promises";
 
 let worker;
 before(async () => {
@@ -89,7 +90,7 @@ test("publication HEAD and conditional reads retain metadata without a response 
 });
 
 test("unknown public paths never fall through to a bucket or an origin", async () => {
-  for (const path of ["ota.cheesesec.com/", "res.cheesesec.com/", "store.cheesesec.com/api/sites", "store.cheesesec.com/v1/policy/private.json", "ota.cheesesec.com/v1/channels/latest/index.json", "res.cheesesec.com/resources/private", "store.cheesesec.com/v1/schema/crp/%2e%2e%2fsecret.schema.json"]) {
+  for (const path of ["store.cheesesec.com/api/sites", "store.cheesesec.com/v1/policy/private.json", "ota.cheesesec.com/v1/channels/latest/index.json", "res.cheesesec.com/resources/private", "store.cheesesec.com/v1/schema/crp/%2e%2e%2fsecret.schema.json"]) {
     const { env, calls } = fixture();
     const response = await worker.fetch(new Request(`https://${path}`), env);
     assert.equal(response.status, 404, path);
@@ -102,7 +103,10 @@ test("ordinary browsers receive a store page while v1 remains a separate JSON re
   const page = await worker.fetch(new Request("https://store.cheesesec.com/", { headers: { cookie: "cheesec-locale=zh-CN" } }), env);
   assert.equal(page.status, 200);
   assert.equal(page.headers.get("content-type"), "text/html; charset=utf-8");
-  assert.match(await page.text(), /<html\b/);
+  const html = await page.text();
+  assert.match(html, /<html\b/);
+  assert.match(html, /<link rel="icon" href="\/cheesesec-favicon\.png" type="image\/png" sizes="32x32">/);
+  assert.match(html, /<img src="\/cheesesec-logo\.png" width="40" height="40" alt="">/);
   assert.match(page.headers.get("content-security-policy"), /script-src 'self'/);
   assert.deepEqual(calls, []);
   const api = await worker.fetch(new Request("https://store.cheesesec.com/v1/catalog/index.json"), env);
@@ -111,7 +115,7 @@ test("ordinary browsers receive a store page while v1 remains a separate JSON re
   const head = await worker.fetch(new Request("https://store.cheesesec.com/", { method: "HEAD" }), env);
   assert.equal(head.status, 200);
   assert.equal(head.body, null);
-  for (const path of ["/storefront.css", "/storefront.js", "/catalog.mjs", "/logo.png"]) {
+  for (const path of ["/storefront.css", "/storefront.js", "/catalog.mjs", "/logo.png", "/cheesesec-logo.png", "/cheesesec-favicon.png", "/favicon.ico"]) {
     const asset = await worker.fetch(new Request(`https://store.cheesesec.com${path}`), env);
     assert.equal(asset.status, 200);
     assert.equal(asset.headers.get("x-content-type-options"), "nosniff");
@@ -153,6 +157,28 @@ test("the served storefront ships planned packs as non-installable cards", async
   const styles = await worker.fetch(new Request("https://store.cheesesec.com/storefront.css"), env);
   assert.equal(styles.status, 200);
   assert.match(await styles.text(), /\.planned-card\{/);
+});
+
+test("store branding serves exact PNG bytes while preserving the product logo", async () => {
+  const { env, calls } = fixture();
+  for (const [path, filename] of [
+    ["/logo.png", "logo.png"],
+    ["/cheesesec-logo.png", "cheesesec-logo.png"],
+    ["/cheesesec-favicon.png", "cheesesec-favicon.png"],
+    ["/favicon.ico", "cheesesec-favicon.png"],
+  ]) {
+    const expected = await readFile(new URL(`../storefront/${filename}`, import.meta.url));
+    const response = await worker.fetch(new Request(`https://store.cheesesec.com${path}`), env);
+    assert.equal(response.status, 200, path);
+    assert.equal(response.headers.get("content-type"), "image/png");
+    assert.equal(response.headers.get("content-length"), String(expected.byteLength));
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected, path);
+    const head = await worker.fetch(new Request(`https://store.cheesesec.com${path}`, { method: "HEAD" }), env);
+    assert.equal(head.status, 200, path);
+    assert.equal(head.headers.get("content-length"), String(expected.byteLength));
+    assert.equal(head.body, null);
+  }
+  assert.deepEqual(calls, []);
 });
 
 test("website, local, API and console hosts have no assets or management proxy in this service", async () => {
