@@ -102,7 +102,7 @@ test("Wrangler's complete emitted module graph starts in workerd with real Array
       assert.equal((await statusFor(host)).counters.visits, 1, "status polling must not count as visits");
       t.diagnostic(`${host} /status headers: ${JSON.stringify({ status: response.status, contentType: response.headers.get("content-type"), cacheControl: response.headers.get("cache-control"), bytes: response.headers.get("content-length") })}; counters: ${JSON.stringify(after.counters)}`);
     }
-    const png = await worker.fetch("https://store.cheesesec.com/cheesesec-logo.png");
+    const png = await worker.fetch("https://store.cheesesec.com/cheesesec-logo-f47c31516ea8.png");
     assert.equal(png.headers.get("content-type"), "image/png");
     assert.equal(png.headers.get("content-length"), String(brandBytes.byteLength));
     assert.deepEqual(Buffer.from(await png.arrayBuffer()), brandBytes);

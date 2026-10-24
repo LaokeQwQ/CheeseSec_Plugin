@@ -13,8 +13,8 @@ const assets = new Map<string, { body: string | Uint8Array; type: string }>([
   ["/storefront.js", { body: script, type: "text/javascript; charset=utf-8" }],
   ["/catalog.mjs", { body: catalog, type: "text/javascript; charset=utf-8" }],
   ["/logo.png", { body: logo, type: "image/png" }],
-  ["/cheesesec-logo.png", { body: brandLogo, type: "image/png" }],
-  ["/cheesesec-favicon.png", { body: favicon, type: "image/png" }],
+  ["/cheesesec-logo-f47c31516ea8.png", { body: brandLogo, type: "image/png" }],
+  ["/cheesesec-favicon-f2ff62d599fd.png", { body: favicon, type: "image/png" }],
   ["/favicon.ico", { body: favicon, type: "image/png" }],
 ]);
 
