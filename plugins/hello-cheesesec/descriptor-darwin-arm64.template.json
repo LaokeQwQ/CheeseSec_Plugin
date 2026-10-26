@@ -1,0 +1,15 @@
+{
+  "api_version": "crp.cheesewaf.io/v1",
+  "descriptor_id": "official-hello-cheesesec-darwin-arm64-0.1.0",
+  "plugin_id": "hello-cheesesec-darwin-arm64",
+  "runtime": "sidecar",
+  "version": "0.1.0",
+  "manifest_identity": "0000000000000000000000000000000000000000000000000000000000000000",
+  "artifact_identity": "0000000000000000000000000000000000000000000000000000000000000000",
+  "namespace": "official/hello-cheesesec-darwin-arm64",
+  "source": "official",
+  "source_root": "cheesesec-official-2026",
+  "capabilities": ["observe", "health"],
+  "resources": { "cpu_milli": 100, "memory_bytes": 67108864, "pids": 32 },
+  "metadata": { "request_path": "asynchronous", "initial_mode": "observe", "egress": "deny", "activation_owner": "control-plane" }
+}

@@ -99,7 +99,8 @@ DuckDB 是嵌入式引擎，没有进程内权限边界；SQL 能访问文件、
   `config_schema`、`secret_fields`、`endpoint_templates`、`capabilities` 和
   `publication`。所有对象都使用 `additionalProperties: false`，字符串、数组和模板大小
   都有上限。
-- 允许的 `type` 固定为 `webhook`、`dingtalk`、`feishu`、`wecom`、`telegram` 和 `email`。
+- 允许的 `type` 固定为 `webhook`、`dingtalk`、`feishu`、`wecom`、`telegram`、
+  `email`、`datadog`、`grafana`、`flashcat` 和 `nightingale`。
 - provider pack 没有可执行文件、容器镜像、WASM 或进程内模块，也没有自己的网络栈。
   `endpoint_templates` 只能声明 `https://` 目标，`egress_owner` 固定为
   `cheesewaf-core`；模板变量只能引用 `config_schema.fields` 或 `secret_fields`
@@ -116,6 +117,11 @@ DuckDB 是嵌入式引擎，没有进程内权限边界；SQL 能访问文件、
   核心 `notifiers` 配置字段。
 - `examples/extensions/notifier-provider.json` 是 Feishu 的契约样例，只用于校验字段
   和边界，不是可安装包，也不代表飞书适配器已经实现。
+- `examples/extensions/notifier-providers/` 是 descriptor-only pack 目录：`dingtalk`、
+  `feishu`、`email`、`datadog`、`grafana`、`flashcat`、`nightingale`。每个 pack 都固定
+  `status=planned`、`installable=false`、`crp_binding=descriptor-only`，模板只允许
+  `https://`，凭据只写 `*_ref` 引用名。自建实例类（Grafana、Nightingale）用 `endpoint`
+  字段声明主机，云服务类（Datadog、Flashcat）的模板固定厂商 HTTPS 主机。
 - v1alpha1 sidecar descriptor 契约位于
   `schema/extensions-v1/notification-sidecar.schema.json`，样例为
   `examples/extensions/notification-sidecar.json`。它只允许 `notification` 扩展类和

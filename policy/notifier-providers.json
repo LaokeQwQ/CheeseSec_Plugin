@@ -9,7 +9,18 @@
   "runtime_capability_grant": false,
   "provider_pack_schema": "schema/extensions-v1/notifier-provider.schema.json",
   "provider_pack_example": "examples/extensions/notifier-provider.json",
-  "allowed_types": ["webhook", "dingtalk", "feishu", "wecom", "telegram", "email"],
+  "allowed_types": [
+    "webhook",
+    "dingtalk",
+    "feishu",
+    "wecom",
+    "telegram",
+    "email",
+    "datadog",
+    "grafana",
+    "flashcat",
+    "nightingale"
+  ],
   "capabilities": {
     "alert_delivery": "core-owned-delivery-only",
     "test_delivery": "core-owned-delivery-only"

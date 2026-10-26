@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fdfaf2">
+  <meta name="description" content="发现 CheeseSec 插件，了解扩展能力、版本和发布信息。">
+  <title>CheeseSec · 插件商店</title>
+  <link rel="icon" href="/cheesesec-favicon-f2ff62d599fd.png" type="image/png" sizes="32x32">
+  <link rel="stylesheet" href="/storefront.css">
+  <script type="module" src="/storefront.js"></script>
+</head>
+<body>
+  <svg class="svg-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6" height="6" rx="1.5"/><rect x="14.5" y="3.5" width="6" height="6" rx="1.5"/><rect x="3.5" y="14.5" width="6" height="6" rx="1.5"/><rect x="14.5" y="14.5" width="6" height="6" rx="1.5"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v5.2c0 4.3-2.8 7.6-8 10-5.2-2.4-8-5.7-8-10V6l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-4.8"/></symbol>
+    <symbol id="icon-radar" viewBox="0 0 24 24"><path d="M20.2 8.3a9 9 0 1 1-4.5-4.5M16.4 10a5 5 0 1 1-2.5-2.5"/><path d="m12 12 8.5-8.5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M5 16.5h14l-2-3V9a5 5 0 0 0-10 0v4.5l-2 3ZM9.5 20h5"/></symbol>
+    <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 4v16h16M8 15v-4m5 4V7m5 8V4"/></symbol>
+    <symbol id="icon-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 20"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24"><path d="M12 5.5C9 3.8 5.8 3.4 3 4.5v15c2.8-1.1 6-.7 9 1 3-1.7 6.2-2.1 9-1v-15c-2.8-1.1-6-.7-9 1Zm0 0v15"/></symbol>
+    <symbol id="icon-puzzle" viewBox="0 0 24 24"><path d="M9 3H4a1 1 0 0 0-1 1v5a3 3 0 1 1 0 6v5a1 1 0 0 0 1 1h5a3 3 0 1 1 6 0h5a1 1 0 0 0 1-1v-5a3 3 0 1 1 0-6V4a1 1 0 0 0-1-1h-5a3 3 0 1 1-6 0Z"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20.5 14A8.8 8.8 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z"/></symbol>
+    <symbol id="icon-error" viewBox="0 0 24 24"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5m0 3v.2"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+  </svg>
+  <a class="skip-link" href="#catalog" data-i18n="skip">跳到插件目录</a>
+  <header class="app-bar">
+    <a class="brand" href="https://cheesesec.com/" aria-label="CheeseSec 首页">
+      <span class="brand-mark" aria-hidden="true"><img src="/cheesesec-logo-f47c31516ea8.png" width="40" height="40" alt=""></span>
+      <span>CheeseSec<span class="brand-divider">/</span><span class="brand-label" data-i18n="store">插件商店</span></span>
+    </a>
+    <nav class="top-nav" aria-label="主导航">
+      <a class="nav-active" href="/" aria-current="page" data-i18n="explore">发现插件</a>
+      <a class="docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" data-i18n="docs">文档</a>
+      <a href="https://github.com/LaokeQwQ/CheeseSec_Plugin" rel="noreferrer">GitHub<svg class="icon external-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+    </nav>
+    <div class="header-actions">
+      <button id="language-toggle" class="language-button" type="button" aria-label="Switch to English">EN</button>
+      <button id="theme-toggle" class="icon-button" type="button" aria-label="切换深色模式"><svg class="icon theme-moon" aria-hidden="true"><use href="#icon-moon"/></svg><svg class="icon theme-sun" aria-hidden="true"><use href="#icon-sun"/></svg></button>
+    </div>
+  </header>
+  <main class="page-shell">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>CHEESESEC PLUGINS</p>
+        <h1 id="hero-title" data-i18n="heroTitle">为每一种防护，<br>找到合适的扩展。</h1>
+        <p class="hero-description" data-i18n="heroDescription">面向 CheeseSec 全生态的独立插件，在不同产品间扩展你的安全工具。</p>
+        <a class="text-link docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/"><span data-i18n="learnPlugins">了解 CheeseSec 插件</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <span class="orbit orbit-one"></span><span class="orbit orbit-two"></span>
+        <div class="extension-tile tile-back"><svg class="icon"><use href="#icon-chart"/></svg><span class="tile-line"></span><span class="tile-line short"></span></div>
+        <div class="extension-tile tile-middle"><svg class="icon"><use href="#icon-bell"/></svg><span class="tile-line"></span><span class="tile-line short"></span></div>
+        <div class="extension-tile tile-front"><svg class="icon"><use href="#icon-puzzle"/></svg><span class="tile-connector"></span><span class="tile-line"></span><span class="tile-line short"></span></div>
+        <span class="art-spark spark-one">+</span><span class="art-spark spark-two">+</span>
+      </div>
+    </section>
+    <div class="catalog-layout">
+      <aside class="catalog-sidebar" aria-label="插件分类">
+        <p class="section-label" data-i18n="categories">分类</p>
+        <nav id="categories" class="category-list" aria-label="插件分类">
+          <button class="category-button selected" type="button" data-category="all" aria-pressed="true"><svg class="icon" aria-hidden="true"><use href="#icon-grid"/></svg><span data-i18n="categoryAll">全部插件</span></button>
+          <button class="category-button" type="button" data-category="security" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-shield"/></svg><span data-i18n="categorySecurity">检测与防护</span></button>
+          <button class="category-button" type="button" data-category="intelligence" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-radar"/></svg><span data-i18n="categoryIntelligence">威胁情报</span></button>
+          <button class="category-button" type="button" data-category="notifications" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-bell"/></svg><span data-i18n="categoryNotifications">通知与集成</span></button>
+          <button class="category-button" type="button" data-category="analysis" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-chart"/></svg><span data-i18n="categoryAnalysis">分析与审计</span></button>
+          <button class="category-button" type="button" data-category="tools" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-code"/></svg><span data-i18n="categoryTools">开发工具</span></button>
+          <button class="category-button" type="button" data-category="examples" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-puzzle"/></svg><span data-i18n="categoryExamples">示例插件</span></button>
+        </nav>
+        <div class="sidebar-note"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><p data-i18n="sidebarNote">有一个好想法？<br>从开发你的第一个插件开始。</p><a class="docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/"><span data-i18n="developerGuide">开发指南</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a></div>
+      </aside>
+      <section id="catalog" class="catalog-main" aria-labelledby="catalog-title">
+        <div class="catalog-tools">
+          <form id="search-form" class="search-field" role="search">
+            <svg class="icon" aria-hidden="true"><use href="#icon-search"/></svg>
+            <input id="plugin-search" type="search" name="q" autocomplete="off" placeholder="搜索插件名称或发布者" aria-label="搜索插件" maxlength="160">
+            <button id="clear-search" class="icon-button" type="button" aria-label="清除搜索" hidden><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button>
+          </form>
+          <label class="sort-field"><span class="sr-only" data-i18n="sortLabel">排序方式</span><select id="sort-select" aria-label="排序方式"><option value="newest" data-i18n="sortNewest">最近发布</option><option value="name" data-i18n="sortName">名称排序</option></select><span class="sort-chevron" aria-hidden="true"><svg class="icon"><use href="#icon-chevron"/></svg></span></label>
+        </div>
+        <div class="catalog-heading"><div><h2 id="catalog-title" data-i18n="categoryAll">全部插件</h2><span id="result-count" class="result-count" aria-live="polite">—</span></div><span id="catalog-caption" class="catalog-caption" data-i18n="catalogCaption">适合你的下一份能力</span></div>
+        <div id="plugin-grid" class="plugin-grid"></div>
+        <section id="example-section" class="example-section" hidden>
+          <div class="example-heading">
+            <div><span class="example-kicker" data-i18n="examplesKicker">示例</span><h2 data-i18n="examplesTitle">示例插件</h2></div>
+            <p data-i18n="examplesDescription">用于验证插件生命周期、启动、健康检查与停止流程，不提供实际防护能力。</p>
+          </div>
+          <div id="example-grid" class="plugin-grid"></div>
+        </section>
+        <section id="catalog-state" class="catalog-state" aria-live="polite" aria-atomic="true">
+          <div class="state-art"><svg id="state-icon" class="icon" aria-hidden="true"><use href="#icon-puzzle"/></svg><span class="state-art-dot dot-one"></span><span class="state-art-dot dot-two"></span></div>
+          <h3 id="state-title" data-i18n="loadingTitle">正在查看插件目录</h3>
+          <p id="state-description" data-i18n="loadingDescription">稍等片刻，新的能力正在加载。</p>
+          <a id="state-docs" class="filled-button docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" hidden><span data-i18n="developerGuide">开发指南</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+          <button id="retry-button" class="filled-button" type="button" hidden><span data-i18n="retry">重新加载</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></button>
+          <button id="reset-filters" class="text-button" type="button" hidden data-i18n="resetFilters">清除筛选</button>
+        </section>
+        <div class="guide-grid">
+          <a class="guide-card guide-green docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/"><div class="guide-icon"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg></div><div><span class="guide-eyebrow" data-i18n="gettingStarted">从这里开始</span><h3 data-i18n="guideTitle">认识插件，找到更多可能</h3><p data-i18n="guideDescription">使用说明、发布方式与安全边界，一处读懂。</p></div><svg class="icon guide-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+          <a class="guide-card guide-yellow developer-link" href="https://docs.cheesesec.com/zh/docs/plugins/"><div class="guide-icon"><svg class="icon" aria-hidden="true"><use href="#icon-code"/></svg></div><div><span class="guide-eyebrow" data-i18n="buildTogether">和我们一起创造</span><h3 data-i18n="buildTitle">把你的想法，变成一个插件</h3><p data-i18n="buildDescription">阅读开发指南，从一个清晰的小能力开始。</p></div><svg class="icon guide-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer"><a class="footer-brand" href="https://cheesesec.com/">CheeseSec</a><p data-i18n="footerNote">让安全的能力，触手可及。</p><div><a class="docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" data-i18n="docs">文档</a><a href="/status" data-i18n="serviceStatus">服务状态</a><a href="/v1/catalog/index.json" data-i18n="catalogApi">目录 API</a><a href="https://github.com/LaokeQwQ/CheeseSec_Plugin" rel="noreferrer">GitHub</a></div></footer>
+  <dialog id="plugin-dialog" class="plugin-dialog" aria-labelledby="detail-title">
+    <button id="close-dialog" class="icon-button dialog-close" type="button" aria-label="关闭详情"><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button>
+    <div class="detail-icon"><svg class="icon" aria-hidden="true"><use href="#icon-puzzle"/></svg></div>
+    <span id="detail-trust" class="detail-trust"></span>
+    <h2 id="detail-title"></h2>
+    <p id="detail-namespace" class="detail-namespace"></p>
+    <p id="detail-summary" class="detail-summary" hidden></p>
+    <div id="detail-lifecycle" class="detail-lifecycle" hidden></div>
+    <dl id="detail-metadata"></dl>
+    <p class="detail-note" data-i18n="detailNote">请在插件说明中确认适用的 CheeseSec 产品、兼容版本与安装方式。</p>
+    <div class="detail-actions">
+      <a id="detail-download" class="filled-button" rel="noreferrer" download><span data-i18n="downloadPackage">下载 .crp 包</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></a>
+      <a class="text-button docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" data-i18n="viewDocs">查看使用文档</a>
+    </div>
+    <div class="detail-guides"><a class="docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" data-i18n="verificationGuide">签名校验说明</a><a class="docs-link" href="https://docs.cheesesec.com/zh/docs/plugins/" data-i18n="compatibilityGuide">兼容性与安装说明</a></div>
+  </dialog>
+  <noscript><p class="noscript-note">请启用 JavaScript 以搜索和筛选插件。你也可以直接查看 <a href="/v1/catalog/index.json">插件目录</a>。 Enable JavaScript to browse plugins.</p></noscript>
+</body>
+</html>

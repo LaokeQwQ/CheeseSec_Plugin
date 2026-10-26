@@ -1,0 +1,13 @@
+{
+  "api_version": "crp.cheesewaf.io/connector/v1",
+  "connector_id": "official-dogecloud-connector-1.0.0",
+  "provider": "dogecloud",
+  "version": "1.0.0",
+  "namespace": "official/dogecloud-connector",
+  "services": ["cdn", "object-storage"],
+  "protocols": {"cdn": ["dogecloud-cdn"], "object-storage": ["s3"]},
+  "status": "planned",
+  "installable": false,
+  "secret_fields": ["access_key_ref", "secret_key_ref"],
+  "publication": {"status": "planned", "installable": false, "crp_binding": "descriptor-only"}
+}

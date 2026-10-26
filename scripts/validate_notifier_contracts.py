@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Validate the planned, descriptor-only notifier provider contract."""
+"""Validate the planned, descriptor-only notifier provider contracts.
+
+Every descriptor under ``examples/extensions/notifier-providers`` is validated, along with the
+legacy single-file example referenced by the policy. Reported provider ids are the pack directory's.
+"""
 from __future__ import annotations
 
 import json
@@ -14,12 +18,17 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "extensions-v1" / "notifier-provider.schema.json"
 POLICY_PATH = ROOT / "policy" / "notifier-providers.json"
 EXAMPLE_PATH = ROOT / "examples" / "extensions" / "notifier-provider.json"
+PROVIDER_PACK_DIR = ROOT / "examples" / "extensions" / "notifier-providers"
 EXPECTED_SCHEMA_ID = "https://store.cheesesec.com/schema/extensions/v1/notifier-provider.schema.json"
 EXPECTED_API_VERSION = "crp.cheesewaf.io/notifier/v1"
 EXPECTED_SIDECAR_CAPABILITIES = ["observe", "candidate_snapshot", "hint", "health"]
 EXPECTED_PUBLICATION = {"status": "planned", "installable": False, "crp_binding": "descriptor-only"}
 PLACEHOLDER = re.compile(r"\{([a-z][a-z0-9_]{0,63})\}")
 URL_LITERAL_TOKEN = re.compile(r"[A-Za-z0-9]{32,}")
+CREDENTIAL_PARAMETER = re.compile(
+    r"(?<![A-Za-z0-9_])(?:access_token|token|secret|password|passwd|api_key|signature|sign|auth)=([^&#]*)",
+    re.IGNORECASE,
+)
 
 
 def strict_load(path: Path) -> Any:
@@ -124,8 +133,16 @@ def validate_provider(provider: dict[str, Any], schema: dict[str, Any], policy: 
         placeholders = set(PLACEHOLDER.findall(url))
         _assert(placeholders == set(template["variables"]), f"{label}: {name} placeholders do not match declared variables")
         _assert(placeholders <= declared, f"{label}: {name} references an undeclared config or secret field")
-        _assert("token" not in url.lower() and "secret" not in url.lower(), f"{label}: {name} embeds a credential name")
-        _assert(URL_LITERAL_TOKEN.search(url) is None, f"{label}: {name} embeds a literal credential")
+        for parameter in CREDENTIAL_PARAMETER.finditer(url):
+            value = PLACEHOLDER.fullmatch(parameter.group(1))
+            _assert(
+                value is not None and value.group(1) in secrets,
+                f"{label}: {name} binds a credential parameter to anything but a declared secret reference",
+            )
+        _assert(
+            URL_LITERAL_TOKEN.search(PLACEHOLDER.sub("{}", url)) is None,
+            f"{label}: {name} embeds a literal credential",
+        )
     if provider["type"] != "email":
         _assert("notify" in template_names, f"{label}: provider must declare a notify template")
     _assert(
@@ -134,14 +151,34 @@ def validate_provider(provider: dict[str, Any], schema: dict[str, Any], policy: 
     )
 
 
+def provider_pack_paths() -> list[Path]:
+    paths = sorted(PROVIDER_PACK_DIR.glob("*.json"))
+    _assert(bool(paths), f"no notifier provider packs found in {PROVIDER_PACK_DIR.relative_to(ROOT)}")
+    return paths
+
+
+def load_and_validate_provider(path: Path, schema: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
+    try:
+        provider = strict_load(path)
+        validate_provider(provider, schema, policy)
+    except (ValueError, json.JSONDecodeError) as exc:
+        raise ValueError(f"{path.relative_to(ROOT)}: {exc}") from exc
+    return provider
+
+
 def validate_contracts() -> list[str]:
     schema = strict_load(SCHEMA_PATH)
     policy = strict_load(POLICY_PATH)
-    example = strict_load(EXAMPLE_PATH)
     schema_validate(policy, {"type": "object"}, "notifier provider policy")
     validate_policy(policy, schema)
-    validate_provider(example, schema, policy)
-    return sorted(provider["provider_id"] for provider in (example,))
+
+    providers = [load_and_validate_provider(path, schema, policy) for path in provider_pack_paths()]
+    ids = [provider["provider_id"] for provider in providers]
+    _assert(len(ids) == len(set(ids)), "duplicate notifier provider id across provider packs")
+
+    load_and_validate_provider(EXAMPLE_PATH, schema, policy)
+
+    return sorted(ids)
 
 
 def main() -> int:
